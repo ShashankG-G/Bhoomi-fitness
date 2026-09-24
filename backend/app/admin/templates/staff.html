@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Staff — Bhoomi Fitness Admin{% endblock %}
+{% block body %}
+{% include "nav.html" %}
+<main>
+  {% if ok %}<div class="card" style="border-color: var(--ok); color: var(--ok);">{{ ok }}</div>{% endif %}
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  <div class="card">
+    <h3 style="margin-top:0;">Staff accounts</h3>
+    <table>
+      <thead><tr><th>Username</th><th>Full name</th><th>Role</th><th>Status</th><th>Created</th><th>Reset password</th></tr></thead>
+      <tbody>
+        {% for s in staff_users %}
+        <tr>
+          <td>{{ s.username }}</td>
+          <td class="muted">{{ s.full_name or "—" }}</td>
+          <td class="muted">{{ s.role }}</td>
+          <td>{% if s.active %}<span class="badge ok">active</span>{% else %}<span class="badge no">disabled</span>{% endif %}</td>
+          <td class="muted">{{ s.created_at.strftime("%Y-%m-%d") }}</td>
+          <td>
+            <form method="post" action="/admin/staff/reset-password" style="display:flex; gap:8px;">
+              <input type="hidden" name="staff_id" value="{{ s.id }}" />
+              <input type="password" name="new_password" placeholder="New password" minlength="8" required />
+              <button type="submit">Set</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted">No staff accounts yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Add a new staff account</h3>
+    <form method="post" action="/admin/staff/create" class="filter-form">
+      <input type="text" name="username" placeholder="Username" required />
+      <input type="text" name="full_name" placeholder="Full name (optional)" />
+      <input type="password" name="password" placeholder="Password" minlength="8" required />
+      <button type="submit">Create</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app import models
+from app import models, security
 from app.admin.session import ADMIN_COOKIE_NAME, require_admin, sign_session
 from app.config import settings
 from app.database import get_db
@@ -190,4 +190,69 @@ def admin_cafeteria(request: Request, status: str = "", db: Session = Depends(ge
             "status": status,
             "total_revenue": f"{float(total_revenue):.2f}",
         },
+    )
+
+
+@router.get("/staff", dependencies=[Depends(require_admin)])
+def admin_staff(request: Request, db: Session = Depends(get_db)):
+    staff_users = db.query(models.StaffUser).order_by(models.StaffUser.created_at.asc()).all()
+    return templates.TemplateResponse(
+        request,
+        "staff.html",
+        {
+            "staff_users": staff_users,
+            "active": "staff",
+            "ok": request.query_params.get("ok"),
+            "error": request.query_params.get("error"),
+        },
+    )
+
+
+@router.post("/staff/create", dependencies=[Depends(require_admin)])
+def admin_staff_create(
+    username: str = Form(...),
+    password: str = Form(...),
+    full_name: str = Form(""),
+    db: Session = Depends(get_db),
+):
+    username = username.strip()
+    if not username or len(password) < 8:
+        return RedirectResponse(
+            url="/admin/staff?error=Username+required+and+password+must+be+at+least+8+characters.",
+            status_code=303,
+        )
+    existing = db.query(models.StaffUser).filter(models.StaffUser.username == username).first()
+    if existing:
+        return RedirectResponse(url="/admin/staff?error=That+username+already+exists.", status_code=303)
+
+    db.add(
+        models.StaffUser(
+            username=username,
+            password_hash=security.hash_password(password),
+            full_name=full_name.strip() or None,
+            role="staff",
+            active=True,
+        )
+    )
+    db.commit()
+    return RedirectResponse(url=f"/admin/staff?ok=Created+staff+account+%27{username}%27.", status_code=303)
+
+
+@router.post("/staff/reset-password", dependencies=[Depends(require_admin)])
+def admin_staff_reset_password(
+    staff_id: int = Form(...),
+    new_password: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    if len(new_password) < 8:
+        return RedirectResponse(url="/admin/staff?error=Password+must+be+at+least+8+characters.", status_code=303)
+
+    staff_user = db.query(models.StaffUser).filter(models.StaffUser.id == staff_id).first()
+    if not staff_user:
+        return RedirectResponse(url="/admin/staff?error=Staff+account+not+found.", status_code=303)
+
+    staff_user.password_hash = security.hash_password(new_password)
+    db.commit()
+    return RedirectResponse(
+        url=f"/admin/staff?ok=Password+updated+for+%27{staff_user.username}%27.", status_code=303
     )
