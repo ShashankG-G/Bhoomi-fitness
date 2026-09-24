@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Workouts — Bhoomi Fitness Admin{% endblock %}
+{% block body %}
+{% include "nav.html" %}
+<main>
+  <div class="card">
+    <h3 style="margin-top:0;">Exercise library ({{ exercises|length }})</h3>
+    <table>
+      <thead><tr><th>Name</th><th>Muscle group</th><th>Default</th></tr></thead>
+      <tbody>
+        {% for ex in exercises %}
+        <tr>
+          <td>{{ ex.name }}</td>
+          <td class="muted">{{ ex.muscle_group }}</td>
+          <td class="muted">{{ ex.default_sets }} x {{ ex.default_reps }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Recent sessions</h3>
+    <table>
+      <thead><tr><th>Started</th><th>Member</th><th>Duration</th><th>Calories</th><th>Sets logged</th></tr></thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td class="muted">{{ s.started_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td>{{ s.member.name or s.member.identifier }}</td>
+          <td class="muted">{{ s.duration_seconds or "—" }}s</td>
+          <td class="muted">{{ s.total_calories or "—" }}</td>
+          <td class="muted">{{ s.sets|length }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="muted">No sessions logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

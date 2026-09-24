@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Admin Login — Bhoomi Fitness{% endblock %}
+{% block body %}
+<main style="max-width:400px; margin-top:12vh;">
+  <div class="card">
+    <h2 style="margin-top:0; color:#c9a24b;">Bhoomi Fitness</h2>
+    <p class="muted" style="margin-top:-8px;">Master admin access</p>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form method="post" action="/admin">
+      <div style="margin-bottom:14px;">
+        <input type="password" name="master_key" placeholder="Master key" autofocus required style="width:100%;" />
+      </div>
+      <input type="submit" value="Enter" style="width:100%;" />
+    </form>
+  </div>
+</main>
+{% endblock %}

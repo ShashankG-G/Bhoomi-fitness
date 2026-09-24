@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Members — Bhoomi Fitness Admin{% endblock %}
+{% block body %}
+{% include "nav.html" %}
+<main>
+  <div class="card">
+    <form class="filter-form" method="get" action="/admin/members">
+      <input type="text" name="q" placeholder="Search name, email or phone" value="{{ q or '' }}" />
+      <select name="status">
+        <option value="" {% if not status %}selected{% endif %}>All</option>
+        <option value="active" {% if status == 'active' %}selected{% endif %}>Active membership</option>
+        <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>No membership</option>
+      </select>
+      <button type="submit">Filter</button>
+    </form>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Name</th><th>Identifier</th><th>Membership</th><th>Plan</th><th>Valid until</th><th>Joined</th></tr>
+      </thead>
+      <tbody>
+        {% for m in members %}
+        <tr>
+          <td class="muted">#{{ m.id }}</td>
+          <td>{{ m.name or "—" }}</td>
+          <td>{{ m.identifier }}</td>
+          <td>
+            {% if m.has_active_membership %}<span class="badge ok">active</span>{% else %}<span class="badge no">inactive</span>{% endif %}
+          </td>
+          <td class="muted">{{ m.membership_plan or "—" }}</td>
+          <td class="muted">{{ m.membership_valid_until or "—" }}</td>
+          <td class="muted">{{ m.created_at.strftime("%Y-%m-%d") }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="muted">No members found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Cafeteria — Bhoomi Fitness Admin{% endblock %}
+{% block body %}
+{% include "nav.html" %}
+<main>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="label">Menu items</div>
+      <div class="value">{{ menu_items|length }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Orders (all time)</div>
+      <div class="value">{{ orders|length }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Est. revenue (all time)</div>
+      <div class="value">₹{{ total_revenue }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <form class="filter-form" method="get" action="/admin/cafeteria">
+      <select name="status">
+        <option value="" {% if not status %}selected{% endif %}>All statuses</option>
+        <option value="placed" {% if status == 'placed' %}selected{% endif %}>Placed</option>
+        <option value="preparing" {% if status == 'preparing' %}selected{% endif %}>Preparing</option>
+        <option value="ready" {% if status == 'ready' %}selected{% endif %}>Ready</option>
+        <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+      </select>
+      <button type="submit">Filter</button>
+    </form>
+    <table>
+      <thead><tr><th>Order #</th><th>Member</th><th>Items</th><th>Total</th><th>Status</th><th>Placed</th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td class="muted">#{{ o.id }}</td>
+          <td>{{ o.member.name or o.member.identifier }}</td>
+          <td class="muted">{% for item in o.items %}{{ item.qty }}x {{ item.menu_item.name }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+          <td>₹{{ o.total_inr }}</td>
+          <td><span class="badge muted">{{ o.status }}</span></td>
+          <td class="muted">{{ o.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="muted">No orders yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

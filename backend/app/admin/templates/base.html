@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>{% block title %}Bhoomi Fitness Admin{% endblock %}</title>
+  <style>
+    :root {
+      --bg: #0b0c0e;
+      --panel: #151719;
+      --panel-border: #262a2e;
+      --text: #e8e6e1;
+      --muted: #8b9094;
+      --brass: #c9a24b;
+      --steel: #6f8faf;
+      --danger: #d16060;
+      --ok: #6fae7f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+    }
+    a { color: var(--brass); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    header.topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--panel-border);
+      background: #0e0f11;
+    }
+    header.topbar .brand {
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--brass);
+    }
+    header.topbar .brand span { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: normal; }
+    nav.admin-nav {
+      display: flex;
+      gap: 4px;
+      padding: 0 28px;
+      border-bottom: 1px solid var(--panel-border);
+      background: #0e0f11;
+    }
+    nav.admin-nav a {
+      display: inline-block;
+      padding: 12px 14px;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      font-weight: 500;
+    }
+    nav.admin-nav a:hover { color: var(--text); text-decoration: none; }
+    nav.admin-nav a.active { color: var(--text); border-bottom-color: var(--brass); }
+    main { padding: 28px; max-width: 1200px; margin: 0 auto; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat .value { font-size: 28px; font-weight: 700; margin-top: 6px; color: var(--brass); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--panel-border); }
+    th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge.ok { background: rgba(111,174,127,0.15); color: var(--ok); }
+    .badge.no { background: rgba(209,96,96,0.15); color: var(--danger); }
+    .badge.muted { background: rgba(139,144,148,0.15); color: var(--muted); }
+    form.filter-form { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+    input[type=text], input[type=password], select {
+      background: #0e0f11;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button, input[type=submit] {
+      background: var(--brass);
+      color: #1a1503;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover, input[type=submit]:hover { filter: brightness(1.08); }
+    .muted { color: var(--muted); }
+    .error { color: var(--danger); margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  {% block body %}{% endblock %}
+</body>
+</html>

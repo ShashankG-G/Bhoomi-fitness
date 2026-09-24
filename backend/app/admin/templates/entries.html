@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Entry Log — Bhoomi Fitness Admin{% endblock %}
+{% block body %}
+{% include "nav.html" %}
+<main>
+  <div class="card">
+    <form class="filter-form" method="get" action="/admin/entries">
+      <input type="text" name="q" placeholder="Search member name/identifier" value="{{ q or '' }}" />
+      <select name="result">
+        <option value="" {% if not result %}selected{% endif %}>All results</option>
+        <option value="allowed" {% if result == 'allowed' %}selected{% endif %}>Allowed</option>
+        <option value="denied" {% if result == 'denied' %}selected{% endif %}>Denied</option>
+      </select>
+      <button type="submit">Filter</button>
+    </form>
+    <table>
+      <thead>
+        <tr><th>Time</th><th>Member</th><th>Result</th><th>Reason</th><th>Window</th></tr>
+      </thead>
+      <tbody>
+        {% for e in entries %}
+        <tr>
+          <td class="muted">{{ e.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+          <td>{{ e.member.name or e.member.identifier if e.member else (e.identifier_used or "unknown") }}</td>
+          <td>{% if e.success %}<span class="badge ok">allowed</span>{% else %}<span class="badge no">denied</span>{% endif %}</td>
+          <td class="muted">{{ e.reason }}</td>
+          <td class="muted">{{ e.window if e.window is not none else "—" }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="muted">No entries logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

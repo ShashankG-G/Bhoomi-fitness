@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Bhoomi Fitness Admin{% endblock %}
+{% block body %}
+{% include "nav.html" %}
+<main>
+  <div class="stat-grid">
+    <div class="stat">
+      <div class="label">Total members</div>
+      <div class="value">{{ total_members }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Active memberships</div>
+      <div class="value">{{ active_members }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Entries today</div>
+      <div class="value">{{ entries_today }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Cafeteria orders today</div>
+      <div class="value">{{ orders_today }}</div>
+    </div>
+    <div class="stat">
+      <div class="label">Est. revenue today (cafeteria)</div>
+      <div class="value">₹{{ revenue_today }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Recently checked in (last {{ recent_entries|length }})</h3>
+    <table>
+      <thead><tr><th>Time</th><th>Member</th><th>Result</th><th>Reason</th></tr></thead>
+      <tbody>
+        {% for e in recent_entries %}
+        <tr>
+          <td class="muted">{{ e.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+          <td>{{ e.member.name or e.member.identifier if e.member else (e.identifier_used or "unknown") }}</td>
+          <td>{% if e.success %}<span class="badge ok">allowed</span>{% else %}<span class="badge no">denied</span>{% endif %}</td>
+          <td class="muted">{{ e.reason }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="muted">No entries logged yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}

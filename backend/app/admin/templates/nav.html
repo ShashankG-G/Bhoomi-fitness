@@ -1,0 +1,11 @@
+<header class="topbar">
+  <div class="brand">Bhoomi Fitness <span>/ master admin</span></div>
+  <div class="muted">Kengeri, Bengaluru</div>
+</header>
+<nav class="admin-nav">
+  <a href="/admin/dashboard" class="{% if active == 'dashboard' %}active{% endif %}">Dashboard</a>
+  <a href="/admin/members" class="{% if active == 'members' %}active{% endif %}">Members</a>
+  <a href="/admin/entries" class="{% if active == 'entries' %}active{% endif %}">Entry Log</a>
+  <a href="/admin/workouts" class="{% if active == 'workouts' %}active{% endif %}">Workouts</a>
+  <a href="/admin/cafeteria" class="{% if active == 'cafeteria' %}active{% endif %}">Cafeteria</a>
+</nav>

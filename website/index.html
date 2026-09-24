@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<!--
+  Bhoomi Fitness — public marketing website
+  ------------------------------------------------------------------
+  Part of the bhoomi-fitness monorepo (see /docs/SPEC.md at the repo
+  root for the full brand + build contract). This folder is deployed
+  standalone to GitHub Pages as a static site — no build step.
+
+  NOTE ON THE OTHER APPS:
+  The member-facing app (client-app/) and the staff app (master-app/)
+  are SEPARATE React+Vite PWAs, but they publish to the SAME GitHub
+  Pages site as this website, at the subpaths /app/ and /staff/ (see
+  .github/workflows/deploy-pages.yml). The links below are relative
+  paths into those subpaths and need no further edits after deploy.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bhoomi Fitness — Premium Training in Kengeri, Bengaluru</title>
+  <meta name="description" content="Bhoomi Fitness is a premium strength and fitness studio in Kengeri, Bengaluru — expert trainers, modern equipment, personalized programs, and a standard of discipline built for real results." />
+  <meta name="theme-color" content="#0a0a0a" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Bhoomi Fitness — Kengeri, Bengaluru" />
+  <meta property="og:description" content="Premium strength training, built on discipline. Kengeri's home for serious fitness." />
+  <meta property="og:type" content="website" />
+
+  <!-- Fonts: Oswald (bold condensed display, headlines) + Inter (clean sans, body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0a0a'/%3E%3Ctext x='50' y='68' font-size='58' font-family='Georgia,serif' fill='%23c9a24b' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- Skip link for keyboard / screen-reader users -->
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ============ HEADER / NAV ============ -->
+  <header class="site-header" id="site-header">
+    <div class="nav-inner">
+      <a href="#hero" class="brand-mark">BHOOMI <span>FITNESS</span></a>
+
+      <nav class="main-nav" id="main-nav" aria-label="Primary">
+        <a href="#philosophy">Philosophy</a>
+        <a href="#benefits">Benefits</a>
+        <a href="#facilities">Facilities</a>
+        <a href="#membership">Membership</a>
+        <a href="#location">Location</a>
+        <a href="./app/" class="nav-cta" data-member-login>Member Login</a>
+      </nav>
+
+      <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="hero-bg" aria-hidden="true"></div>
+      <div class="hero-vignette" aria-hidden="true"></div>
+      <div class="hero-content">
+        <p class="hero-eyebrow reveal">Kengeri, Bengaluru</p>
+        <h1 class="hero-title">
+          <span class="reveal-line"><span>Your strongest</span></span>
+          <span class="reveal-line"><span>self begins <em>here.</em></span></span>
+        </h1>
+        <p class="hero-sub reveal">
+          A premium training ground for people who take their goals seriously —
+          expert coaching, modern equipment, and a standard of discipline built
+          for real results.
+        </p>
+        <div class="hero-actions reveal">
+          <a href="#facilities" class="btn btn-primary">Explore the Gym</a>
+          <a href="#location" class="btn btn-ghost">Visit Us</a>
+        </div>
+      </div>
+      <a href="#philosophy" class="scroll-cue" aria-label="Scroll to next section">
+        <span></span>
+      </a>
+    </section>
+
+    <!-- ============ PHILOSOPHY / ABOUT ============ -->
+    <section class="philosophy" id="philosophy">
+      <div class="section-inner">
+        <p class="kicker reveal">Our Philosophy</p>
+        <h2 class="reveal">Discipline, not decoration.</h2>
+        <div class="philosophy-copy">
+          <p class="lead reveal">
+            <strong>Bhoomi</strong> means <em>earth</em> — grounded, elemental,
+            unshakeable. That's the standard we train to.
+          </p>
+          <p class="reveal">
+            We didn't build Bhoomi Fitness to be another loud, flashy gym.
+            We built it for people in Kengeri who want a quiet, serious place
+            to do hard work — where the equipment is maintained properly, the
+            coaching is real, and progress is tracked, not guessed at. No
+            gimmicks, no crash promises. Just consistent training, expert
+            guidance, and a community that shows up.
+          </p>
+          <p class="reveal">
+            Whether you're starting from zero or chasing a number you've
+            never hit before, Bhoomi is built around one idea: results come
+            from showing up with intent, day after day. We handle the rest.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BENEFITS ============ -->
+    <section class="benefits" id="benefits">
+      <div class="section-inner">
+        <p class="kicker reveal">Why Train Here</p>
+        <h2 class="reveal">Everything that makes training work.</h2>
+
+        <div class="benefits-grid">
+          <article class="benefit-card reveal">
+            <span class="benefit-index">01</span>
+            <h3>Expert, Certified Trainers</h3>
+            <p>Hands-on coaching from trainers who correct your form, not just count your reps.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <span class="benefit-index">02</span>
+            <h3>Modern Equipment</h3>
+            <p>A well-maintained floor of strength, cardio and functional equipment — no queues, no broken machines.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <span class="benefit-index">03</span>
+            <h3>Personalized Programs</h3>
+            <p>Training plans built around your goals, your schedule and your starting point — not a generic template.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <span class="benefit-index">04</span>
+            <h3>Flexible Hours</h3>
+            <p>Early mornings, late evenings, or somewhere in between — the gym fits around your day, not the other way round.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <span class="benefit-index">05</span>
+            <h3>A Clean, Hygienic Facility</h3>
+            <p>Equipment sanitized and floors maintained daily, because a serious gym should also be a clean one.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <span class="benefit-index">06</span>
+            <h3>Cafeteria On-Site</h3>
+            <p>A dedicated cafeteria upstairs for protein-forward meals and shakes, right after you train.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <span class="benefit-index">07</span>
+            <h3>A Real Community</h3>
+            <p>Train alongside members who take it seriously — the kind of energy that keeps you accountable.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <span class="benefit-index">08</span>
+            <h3>Progress You Can See</h3>
+            <p>Log every session and track history in the Bhoomi member app, with a fast tap-in entry system at the door.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FACILITIES ============ -->
+    <section class="facilities" id="facilities">
+      <div class="section-inner">
+        <p class="kicker reveal">The Space</p>
+        <h2 class="reveal">Built with intent, zone by zone.</h2>
+        <p class="lead reveal facilities-intro">
+          Every corner of Bhoomi Fitness is laid out for a reason — so you
+          spend your time training, not waiting.
+        </p>
+
+        <div class="facilities-grid">
+          <figure class="facility-tile reveal facility-tile--large">
+            <img
+              src="https://picsum.photos/seed/bhoomi-strength/1000/750"
+              alt="Illustrative placeholder photo representing a strength training floor with free weights and racks"
+              loading="lazy"
+              width="1000" height="750"
+            />
+            <figcaption>
+              <h3>Strength &amp; Free Weight Zone</h3>
+              <p>Racks, barbells and a full range of free weights for serious lifting.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="facility-tile reveal">
+            <img
+              src="https://picsum.photos/seed/bhoomi-cardio/700/700"
+              alt="Illustrative placeholder photo representing a cardio training area"
+              loading="lazy"
+              width="700" height="700"
+            />
+            <figcaption>
+              <h3>Cardio Deck</h3>
+              <p>Treadmills, bikes and rowers for conditioning work.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="facility-tile reveal">
+            <img
+              src="https://picsum.photos/seed/bhoomi-functional/700/700"
+              alt="Illustrative placeholder photo representing a functional and turf training area"
+              loading="lazy"
+              width="700" height="700"
+            />
+            <figcaption>
+              <h3>Functional &amp; Turf Zone</h3>
+              <p>Open floor space for mobility, conditioning and functional work.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="facility-tile reveal">
+            <img
+              src="https://picsum.photos/seed/bhoomi-cafeteria/700/700"
+              alt="Illustrative placeholder photo representing an on-site cafeteria seating area"
+              loading="lazy"
+              width="700" height="700"
+            />
+            <figcaption>
+              <h3>Cafeteria, Upstairs</h3>
+              <p>A calm space above the gym floor for meals, shakes and recovery.</p>
+            </figcaption>
+          </figure>
+
+          <figure class="facility-tile reveal facility-tile--wide">
+            <img
+              src="https://picsum.photos/seed/bhoomi-locker/1000/500"
+              alt="Illustrative placeholder photo representing locker and changing facilities"
+              loading="lazy"
+              width="1000" height="500"
+            />
+            <figcaption>
+              <h3>Locker &amp; Changing Rooms</h3>
+              <p>Secure, clean facilities so you can come straight from work.</p>
+            </figcaption>
+          </figure>
+        </div>
+
+        <p class="facilities-disclaimer reveal">
+          Images above are illustrative placeholders, not real photographs of
+          Bhoomi Fitness. Real facility photography is coming soon.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ MEMBERSHIP (COMING SOON) ============ -->
+    <section class="membership" id="membership">
+      <div class="section-inner membership-inner">
+        <p class="kicker reveal">Membership</p>
+        <h2 class="reveal">Online sign-up is coming soon.</h2>
+        <p class="lead reveal">
+          We're finishing the details on plans and pricing. For now, the
+          fastest way to join is to walk in and talk to our front desk — but
+          if you'd rather wait, leave your email and we'll let you know the
+          moment memberships open online.
+        </p>
+
+        <!--
+          This form intentionally posts nowhere functional yet.
+          TODO(backend): wire this up to a real newsletter/interest-capture
+          endpoint once one exists (e.g. POST /api/newsletter/subscribe on
+          the FastAPI backend in /backend). Until then, submission is
+          prevented client-side in js/main.js and the user sees an inline
+          "thanks, coming soon" confirmation instead of a real network call.
+        -->
+        <form class="membership-form reveal" id="membership-form" action="#" method="post" novalidate>
+          <label for="membership-email" class="visually-hidden">Email address</label>
+          <input
+            type="email"
+            id="membership-email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            autocomplete="email"
+          />
+          <button type="submit" class="btn btn-primary">Notify Me</button>
+        </form>
+        <p class="membership-note" id="membership-note" role="status" aria-live="polite"></p>
+
+        <span class="coming-soon-badge">Coming Soon</span>
+      </div>
+    </section>
+
+    <!-- ============ LOCATION ============ -->
+    <section class="location" id="location">
+      <div class="section-inner">
+        <p class="kicker reveal">Find Us</p>
+        <h2 class="reveal">Train in the heart of Kengeri.</h2>
+
+        <div class="location-grid">
+          <div class="location-details reveal">
+            <dl>
+              <div>
+                <dt>Address</dt>
+                <dd>Bhoomi Fitness<br />Kengeri, Bengaluru<br />Karnataka, India</dd>
+              </div>
+              <div>
+                <dt>Hours</dt>
+                <dd>
+                  Mon – Sat: 5:00 AM – 10:00 PM<br />
+                  Sunday: 6:00 AM – 12:00 PM
+                  <br /><span class="muted-note">(placeholder hours — confirm with front desk)</span>
+                </dd>
+              </div>
+              <div>
+                <dt>Contact</dt>
+                <dd>
+                  Phone: <a href="tel:+910000000000">+91 00000 00000</a> <span class="muted-note">(placeholder)</span><br />
+                  Email: <a href="mailto:hello@bhoomifitness.in">hello@bhoomifitness.in</a> <span class="muted-note">(placeholder)</span>
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="location-map reveal">
+            <iframe
+              title="Map showing Kengeri, Bengaluru"
+              src="https://maps.google.com/maps?q=Kengeri,+Bengaluru,+Karnataka,+India&t=&z=13&ie=UTF8&iwloc=&output=embed"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="section-inner footer-inner">
+      <div class="footer-brand">
+        <p class="brand-mark">BHOOMI <span>FITNESS</span></p>
+        <p class="footer-tagline">Discipline, built with intent.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Follow</h4>
+        <ul class="footer-links">
+          <!-- Placeholders: swap for real social profiles when available -->
+          <li><a href="#" rel="noopener">Instagram</a></li>
+          <li><a href="#" rel="noopener">Facebook</a></li>
+          <li><a href="#" rel="noopener">YouTube</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Visit</h4>
+        <address>
+          Kengeri, Bengaluru<br />
+          Karnataka, India
+        </address>
+      </div>
+
+      <div class="footer-col">
+        <h4>Apps</h4>
+        <ul class="footer-links">
+          <li><a href="./app/" data-member-login>Member App</a></li>
+          <li><a href="./staff/" data-staff-login>Staff App</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <span id="footer-year">2026</span> Bhoomi Fitness, Kengeri, Bengaluru. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- GSAP + ScrollTrigger from cdnjs, deferred. Content is visible by default
+       via CSS, so if these fail to load the site still renders correctly —
+       animation is a progressive enhancement, not a requirement. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="js/main.js" defer></script>
+</body>
+</html>

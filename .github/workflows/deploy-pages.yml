@@ -1,0 +1,112 @@
+name: Deploy to GitHub Pages
+
+# Builds and publishes all three static frontends to ONE GitHub Pages site:
+#   /            -> website/        (marketing site)
+#   /app/        -> client-app/     (member PWA)
+#   /staff/      -> master-app/     (staff PWA)
+#
+# The backend is NOT part of this workflow — it deploys separately to
+# Render (or whatever host you chose), see docs/DEPLOYMENT.md. This
+# workflow only needs one repository variable set before it will work:
+#
+#   Settings -> Secrets and variables -> Actions -> Variables ->
+#   New repository variable -> name: BACKEND_API_URL
+#   value: your live backend URL, e.g. https://bhoomi-fitness.onrender.com
+#   (no trailing slash)
+#
+# It's a plain repository *variable*, not a secret, since it ends up
+# baked into public client-side JS anyway — there's nothing to protect.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "client-app/**"
+      - "master-app/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            client-app/package-lock.json
+            master-app/package-lock.json
+
+      # --- Assemble the combined output directory ------------------------
+      - name: Start combined site with the website
+        run: |
+          mkdir -p site
+          cp -r website/. site/
+          rm -f site/README.md
+
+      # --- Build client-app (member app) under /app/ ----------------------
+      - name: Install client-app dependencies
+        working-directory: client-app
+        run: npm ci
+
+      - name: Build client-app
+        working-directory: client-app
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/app/
+          VITE_API_URL: ${{ vars.BACKEND_API_URL }}
+        run: npm run build
+
+      - name: Copy client-app build into site/app
+        run: |
+          mkdir -p site/app
+          cp -r client-app/dist/. site/app/
+
+      # --- Build master-app (staff app) under /staff/ ---------------------
+      - name: Install master-app dependencies
+        working-directory: master-app
+        run: npm ci
+
+      - name: Build master-app
+        working-directory: master-app
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/staff/
+          VITE_API_URL: ${{ vars.BACKEND_API_URL }}
+        run: npm run build
+
+      - name: Copy master-app build into site/staff
+        run: |
+          mkdir -p site/staff
+          cp -r master-app/dist/. site/staff/
+
+      - name: Warn if BACKEND_API_URL isn't set
+        if: ${{ vars.BACKEND_API_URL == '' }}
+        run: |
+          echo "::warning::BACKEND_API_URL repository variable is not set — client-app and master-app were built pointing at http://localhost:8000, which will not work once deployed. Set it under Settings > Secrets and variables > Actions > Variables and re-run this workflow."
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
