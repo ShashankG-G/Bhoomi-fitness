@@ -50,6 +50,24 @@ def on_startup():
         settings.DATABASE_URL.split("://")[0] + "://***",
     )
 
+    # Auto-seed on every startup: the exercise library, cafeteria menu, and
+    # default staff account. `seed()` is idempotent (skips rows that already
+    # exist) and cheap, so running it unconditionally on every boot is safe
+    # and means deployment never depends on shell/SSH access — some hosts'
+    # free tiers (e.g. Render) don't offer a shell there at all. Wrapped so a
+    # seeding hiccup logs a warning instead of taking the whole app down.
+    try:
+        from app.seed import seed
+
+        seed()
+    except Exception:
+        logging.getLogger("bhoomi").exception(
+            "Startup seeding failed — app will still start, but the "
+            "exercise library / cafeteria menu / default staff account may "
+            "be incomplete. Investigate and consider re-running "
+            "`python -m app.seed` manually."
+        )
+
 
 # --- JSON API routers ------------------------------------------------------
 app.include_router(auth.router)
