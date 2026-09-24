@@ -42,6 +42,11 @@ class Settings:
     # --- App mode ---------------------------------------------------------
     BACKEND_ENV: str = os.getenv("BACKEND_ENV", "development")
 
+    # When "true", seeds 10 demo members with varied membership states on
+    # startup (idempotent — safe to leave set). For showing the app to
+    # someone with realistic-looking data already in it. See app/seed.py.
+    SEED_DEMO_DATA: bool = os.getenv("SEED_DEMO_DATA", "false").lower() == "true"
+
     @property
     def is_development(self) -> bool:
         return self.BACKEND_ENV.lower() != "production"

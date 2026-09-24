@@ -68,6 +68,19 @@ def on_startup():
             "`python -m app.seed` manually."
         )
 
+    # Optional: 10 demo members with varied membership states, for showing
+    # the app to someone with realistic data already in it. Off by default —
+    # only runs when SEED_DEMO_DATA=true. Idempotent like the seed above.
+    if settings.SEED_DEMO_DATA:
+        try:
+            from app.seed import seed_demo_members
+
+            seed_demo_members()
+        except Exception:
+            logging.getLogger("bhoomi").exception(
+                "Demo member seeding failed — app will still start."
+            )
+
 
 # --- JSON API routers ------------------------------------------------------
 app.include_router(auth.router)

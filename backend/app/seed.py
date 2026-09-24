@@ -1,10 +1,13 @@
 """
 Idempotent seed script: workout exercise library, cafeteria menu, and one
-default staff account for local/testing use.
+default staff account for local/testing use. Optionally, 10 demo members
+with varied membership states (see seed_demo_members / SEED_DEMO_DATA).
 
 Run with:  python -m app.seed
 (safe to re-run — it only inserts rows that don't already exist)
 """
+import datetime
+
 from app import models, security
 from app.database import Base, SessionLocal, engine
 
@@ -349,6 +352,68 @@ CAFETERIA_MENU = [
 ]
 
 
+# --- Demo members ------------------------------------------------------
+# Only inserted when SEED_DEMO_DATA=true (see app/config.py). Identified by
+# these exact phone numbers, so re-running is idempotent — existing rows are
+# left untouched, matching membership records aren't duplicated. Distribution
+# mirrors what a real front desk mix looks like: some long-term members,
+# some short-term, a couple who haven't activated a membership yet.
+DEMO_MEMBERS = [
+    dict(name="Aarav Sharma", identifier="9800000001", plan="Yearly", days=365, payment_method="online"),
+    dict(name="Diya Patel", identifier="9800000002", plan="Yearly", days=365, payment_method="cash"),
+    dict(name="Vivaan Reddy", identifier="9800000003", plan="Quarterly", days=90, payment_method="online"),
+    dict(name="Ananya Iyer", identifier="9800000004", plan="Quarterly", days=90, payment_method="cash"),
+    dict(name="Kabir Nair", identifier="9800000005", plan="Quarterly", days=90, payment_method="online"),
+    dict(name="Saanvi Rao", identifier="9800000006", plan="Quarterly", days=90, payment_method="cash"),
+    dict(name="Reyansh Gupta", identifier="9800000007", plan="Monthly", days=30, payment_method="online"),
+    dict(name="Ishita Menon", identifier="9800000008", plan="Monthly", days=30, payment_method="cash"),
+    dict(name="Arjun Verma", identifier="9800000009", plan=None, days=None, payment_method=None),
+    dict(name="Myra Joshi", identifier="9800000010", plan=None, days=None, payment_method=None),
+]
+
+
+def seed_demo_members():
+    """Idempotent: skips any identifier that already exists (whether created
+    by this function before, or by a real signup that happens to collide,
+    though these +91-style placeholder numbers are chosen to be unlikely to
+    collide with a real member's login)."""
+    db = SessionLocal()
+    try:
+        existing = {
+            m.identifier for m in db.query(models.Member.identifier).filter(
+                models.Member.identifier.in_([d["identifier"] for d in DEMO_MEMBERS])
+            )
+        }
+        today = datetime.date.today()
+        added = 0
+        for d in DEMO_MEMBERS:
+            if d["identifier"] in existing:
+                continue
+            member = models.Member(
+                name=d["name"],
+                identifier=d["identifier"],
+                qr_secret=security.new_qr_secret(),
+                has_active_membership=d["plan"] is not None,
+                membership_plan=d["plan"],
+                membership_valid_until=(today + datetime.timedelta(days=d["days"])) if d["days"] else None,
+                membership_payment_method=d["payment_method"],
+            )
+            db.add(member)
+            added += 1
+        db.commit()
+
+        print("=" * 60)
+        print("Bhoomi Fitness — demo members seed complete")
+        print(f"  Demo members added: {added} (skipped {len(DEMO_MEMBERS) - added} already present)")
+        print("  2 Yearly, 4 Quarterly, 2 Monthly, 2 no membership")
+        print("  Identifiers: 9800000001 through 9800000010 — log in as any of")
+        print("  them from the member app the same way as a real member (their")
+        print("  OTP code shows up in these server logs, same as any login).")
+        print("=" * 60)
+    finally:
+        db.close()
+
+
 def seed():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
@@ -427,3 +492,7 @@ def seed():
 
 if __name__ == "__main__":
     seed()
+    from app.config import settings
+
+    if settings.SEED_DEMO_DATA:
+        seed_demo_members()
