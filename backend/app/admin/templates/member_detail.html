@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ member.name or member.identifier }} — Bhoomi Fitness Admin{% endblock %}
+{% block body %}
+{% include "nav.html" %}
+<main>
+  <a href="/admin/members">← Back to members</a>
+
+  {% if ok %}<div class="card" style="border-color: var(--ok); color: var(--ok); margin-top:16px;">{{ ok }}</div>{% endif %}
+  {% if error %}<div class="error" style="margin-top:16px;">{{ error }}</div>{% endif %}
+
+  <div class="card" style="margin-top:16px;">
+    <h2 style="margin-top:0;">{{ member.name or "—" }}</h2>
+    <p class="muted" style="margin-top:-8px;">{{ member.identifier }} · joined {{ member.created_at.strftime("%Y-%m-%d") }}</p>
+    <p>
+      {% if member.has_active_membership %}<span class="badge ok">active</span>{% else %}<span class="badge no">inactive</span>{% endif %}
+      {% if member.membership_plan %}<span class="muted">— {{ member.membership_plan }}, valid until {{ member.membership_valid_until }}</span>{% endif %}
+    </p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Activate / change plan</h3>
+    <form method="post" action="/admin/members/{{ member.id }}/update-plan" class="filter-form">
+      <select name="plan">
+        <option value="Monthly" {% if member.membership_plan == 'Monthly' %}selected{% endif %}>Monthly</option>
+        <option value="Quarterly" {% if member.membership_plan == 'Quarterly' %}selected{% endif %}>Quarterly</option>
+        <option value="Yearly" {% if member.membership_plan == 'Yearly' %}selected{% endif %}>Yearly</option>
+        <option value="__custom__">Other (name it below)</option>
+      </select>
+      <input type="text" name="custom_plan" placeholder="Custom plan name (if 'Other')"
+             value="{% if member.membership_plan not in ['Monthly', 'Quarterly', 'Yearly'] %}{{ member.membership_plan or '' }}{% endif %}" />
+      <input type="date" name="valid_until" value="{{ member.membership_valid_until or '' }}" required />
+      <select name="payment_method">
+        <option value="cash" {% if member.membership_payment_method == 'cash' %}selected{% endif %}>Cash</option>
+        <option value="online" {% if member.membership_payment_method == 'online' %}selected{% endif %}>Online</option>
+      </select>
+      <button type="submit">Save plan</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Deactivate membership</h3>
+    <p class="muted">Clears the plan and marks the member as having no active membership. They keep their account, QR, and workout/order history.</p>
+    <form method="post" action="/admin/members/{{ member.id }}/deactivate">
+      <button type="submit" style="background: var(--danger); color: #fff;">Deactivate membership</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

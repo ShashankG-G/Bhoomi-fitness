@@ -108,6 +108,16 @@ def admin_dashboard(request: Request, db: Session = Depends(get_db)):
     )
 
 
+def _resolve_plan(plan: str, custom_plan: str) -> str | None:
+    """Shared by member create/update: turns the admin form's plan select +
+    optional custom-name field into a single plan string, or None for
+    'no membership'."""
+    plan = (plan or "").strip()
+    if plan == "__custom__":
+        return custom_plan.strip() or None
+    return plan or None
+
+
 @router.get("/members", dependencies=[Depends(require_admin)])
 def admin_members(request: Request, q: str = "", status: str = "", db: Session = Depends(get_db)):
     query = db.query(models.Member)
@@ -124,8 +134,130 @@ def admin_members(request: Request, q: str = "", status: str = "", db: Session =
     members = query.order_by(models.Member.created_at.desc()).all()
 
     return templates.TemplateResponse(
-        request, "members.html", {"members": members, "q": q, "status": status}
+        request,
+        "members.html",
+        {
+            "members": members,
+            "q": q,
+            "status": status,
+            "ok": request.query_params.get("ok"),
+            "error": request.query_params.get("error"),
+        },
     )
+
+
+@router.post("/members/create", dependencies=[Depends(require_admin)])
+def admin_member_create(
+    name: str = Form(...),
+    identifier: str = Form(...),
+    plan: str = Form(""),
+    custom_plan: str = Form(""),
+    valid_until: str = Form(""),
+    payment_method: str = Form("cash"),
+    db: Session = Depends(get_db),
+):
+    name = name.strip()
+    identifier = identifier.strip()
+    if not name or not identifier:
+        return RedirectResponse(url="/admin/members?error=Name+and+identifier+are+required.", status_code=303)
+
+    existing = db.query(models.Member).filter(models.Member.identifier == identifier).first()
+    if existing:
+        return RedirectResponse(
+            url="/admin/members?error=A+member+with+that+email%2Fphone+already+exists.", status_code=303
+        )
+
+    final_plan = _resolve_plan(plan, custom_plan)
+    valid_until_date = None
+    if final_plan:
+        if not valid_until:
+            return RedirectResponse(
+                url="/admin/members?error=Pick+a+valid-until+date+for+the+plan%2C+or+choose+%27No+membership+yet%27.",
+                status_code=303,
+            )
+        try:
+            valid_until_date = datetime.date.fromisoformat(valid_until)
+        except ValueError:
+            return RedirectResponse(url="/admin/members?error=Invalid+date.", status_code=303)
+
+    member = models.Member(
+        name=name,
+        identifier=identifier,
+        qr_secret=security.new_qr_secret(),
+        has_active_membership=final_plan is not None,
+        membership_plan=final_plan,
+        membership_valid_until=valid_until_date,
+        membership_payment_method=payment_method if final_plan else None,
+    )
+    db.add(member)
+    db.commit()
+    db.refresh(member)
+
+    return RedirectResponse(url=f"/admin/members/{member.id}?ok=Member+created.", status_code=303)
+
+
+@router.get("/members/{member_id}", dependencies=[Depends(require_admin)])
+def admin_member_detail(request: Request, member_id: int, db: Session = Depends(get_db)):
+    member = db.get(models.Member, member_id)
+    if member is None:
+        return RedirectResponse(url="/admin/members?error=Member+not+found.", status_code=303)
+
+    return templates.TemplateResponse(
+        request,
+        "member_detail.html",
+        {
+            "member": member,
+            "ok": request.query_params.get("ok"),
+            "error": request.query_params.get("error"),
+        },
+    )
+
+
+@router.post("/members/{member_id}/update-plan", dependencies=[Depends(require_admin)])
+def admin_member_update_plan(
+    member_id: int,
+    plan: str = Form(""),
+    custom_plan: str = Form(""),
+    valid_until: str = Form(...),
+    payment_method: str = Form("cash"),
+    db: Session = Depends(get_db),
+):
+    member = db.get(models.Member, member_id)
+    if member is None:
+        return RedirectResponse(url="/admin/members?error=Member+not+found.", status_code=303)
+
+    final_plan = _resolve_plan(plan, custom_plan)
+    if not final_plan:
+        return RedirectResponse(
+            url=f"/admin/members/{member_id}?error=Choose+or+enter+a+plan.", status_code=303
+        )
+    try:
+        valid_until_date = datetime.date.fromisoformat(valid_until)
+    except ValueError:
+        return RedirectResponse(url=f"/admin/members/{member_id}?error=Invalid+date.", status_code=303)
+
+    member.has_active_membership = True
+    member.membership_plan = final_plan
+    member.membership_valid_until = valid_until_date
+    member.membership_payment_method = payment_method
+    db.commit()
+
+    return RedirectResponse(url=f"/admin/members/{member_id}?ok=Plan+updated.", status_code=303)
+
+
+@router.post("/members/{member_id}/deactivate", dependencies=[Depends(require_admin)])
+def admin_member_deactivate(member_id: int, db: Session = Depends(get_db)):
+    member = db.get(models.Member, member_id)
+    if member is None:
+        return RedirectResponse(url="/admin/members?error=Member+not+found.", status_code=303)
+
+    member.has_active_membership = False
+    member.membership_plan = None
+    member.membership_valid_until = None
+    member.membership_payment_method = None
+    db.commit()
+
+    return RedirectResponse(url=f"/admin/members/{member_id}?ok=Membership+deactivated.", status_code=303)
 
 
 @router.get("/entries", dependencies=[Depends(require_admin)])

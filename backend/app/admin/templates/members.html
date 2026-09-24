@@ -3,6 +3,36 @@
 {% block body %}
 {% include "nav.html" %}
 <main>
+  {% if ok %}<div class="card" style="border-color: var(--ok); color: var(--ok);">{{ ok }}</div>{% endif %}
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+
+  <div class="card">
+    <h3 style="margin-top:0;">Add a new member</h3>
+    <form method="post" action="/admin/members/create" class="filter-form">
+      <input type="text" name="name" placeholder="Full name" required />
+      <input type="text" name="identifier" placeholder="Email or phone" required />
+      <select name="plan">
+        <option value="">No membership yet</option>
+        <option value="Monthly">Monthly</option>
+        <option value="Quarterly">Quarterly</option>
+        <option value="Yearly">Yearly</option>
+        <option value="__custom__">Other (name it below)</option>
+      </select>
+      <input type="text" name="custom_plan" placeholder="Custom plan name (if 'Other')" />
+      <input type="date" name="valid_until" />
+      <select name="payment_method">
+        <option value="cash">Cash</option>
+        <option value="online">Online</option>
+      </select>
+      <button type="submit">Create member</button>
+    </form>
+    <p class="muted" style="margin-bottom:0;">
+      Leave plan as "No membership yet" to create the person without activating a
+      membership — you can set it later from their detail page. Otherwise "Valid
+      until" is required.
+    </p>
+  </div>
+
   <div class="card">
     <form class="filter-form" method="get" action="/admin/members">
       <input type="text" name="q" placeholder="Search name, email or phone" value="{{ q or '' }}" />
@@ -21,7 +51,7 @@
         {% for m in members %}
         <tr>
           <td class="muted">#{{ m.id }}</td>
-          <td>{{ m.name or "—" }}</td>
+          <td><a href="/admin/members/{{ m.id }}">{{ m.name or "—" }}</a></td>
           <td>{{ m.identifier }}</td>
           <td>
             {% if m.has_active_membership %}<span class="badge ok">active</span>{% else %}<span class="badge no">inactive</span>{% endif %}
