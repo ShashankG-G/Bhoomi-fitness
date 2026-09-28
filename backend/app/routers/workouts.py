@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 from app import models, schemas
 from app.database import get_db
 from app.deps import get_current_member
+from app.pt_helpers import build_day_range, default_plan_range
 
 router = APIRouter(prefix="/api/workouts", tags=["workouts"])
 
@@ -26,6 +27,24 @@ def get_library(db: Session = Depends(get_db)):
         )
         for e in exercises
     ]
+
+
+@router.get("/personal-training-plan", response_model=list[schemas.PTDayOut])
+def get_personal_training_plan(
+    start: datetime.date | None = Query(None),
+    end: datetime.date | None = Query(None),
+    member: models.Member = Depends(get_current_member),
+    db: Session = Depends(get_db),
+):
+    """The signed-in member's own day-by-day plan, as set by their trainer.
+    Empty for a member who isn't on a personal-training plan, rather than an
+    error — the client-app tab is simply hidden for them based on
+    `member.is_personal_training`, but this stays safe either way."""
+    if not member.is_personal_training:
+        return []
+    range_start, default_end = default_plan_range(start)
+    range_end = end or default_end
+    return build_day_range(db, member.id, range_start, range_end)
 
 
 @router.post("/sessions", response_model=schemas.WorkoutSessionStartOut)

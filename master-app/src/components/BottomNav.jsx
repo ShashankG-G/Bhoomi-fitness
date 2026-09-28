@@ -8,11 +8,14 @@ const BASE_TABS = [
   { to: '/reports', label: 'Reports', icon: ReportsIcon },
 ]
 
+const TRAINER_TAB = { to: '/personal-trainer', label: 'Trainer', icon: TrainerIcon }
 const SUPER_ADMIN_TAB = { to: '/super-admin', label: 'Super Admin', icon: SuperAdminIcon }
 
 export default function BottomNav() {
-  const { isSuperAdmin } = useAuth()
-  const tabs = isSuperAdmin ? [...BASE_TABS, SUPER_ADMIN_TAB] : BASE_TABS
+  const { isSuperAdmin, isTrainer } = useAuth()
+  let tabs = BASE_TABS
+  if (isTrainer) tabs = [...tabs, TRAINER_TAB]
+  if (isSuperAdmin) tabs = [...tabs, SUPER_ADMIN_TAB]
 
   return (
     <nav className="bottom-nav" aria-label="Primary">
@@ -64,6 +67,16 @@ function ReportsIcon() {
       <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"
         stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
       <path d="M14 3v5h5M8 13h8M8 17h8M8 9h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function TrainerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="7" r="3.2" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M9 4.2l1.5-1.5M15 4.2l-1.5-1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }

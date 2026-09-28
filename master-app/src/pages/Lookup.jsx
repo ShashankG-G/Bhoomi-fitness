@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api/client.js'
 
-const PLAN_PRESETS = ['Monthly', 'Quarterly', 'Annual']
+const PLAN_PRESETS = ['Monthly', 'Quarterly', 'Annual', 'Personal Training']
 
 function memberName(m) {
   return m?.name || m?.identifier || m?.phone || m?.email || 'Member'
@@ -97,7 +97,7 @@ export default function Lookup() {
             </div>
           )}
           {!loading && searched && results.length === 0 && !error && (
-            <p className="hint">No members found for "{query.trim()}".</p>
+            <p className="hint">No members found for &quot;{query.trim()}&quot;.</p>
           )}
 
           <ul className="member-list">
@@ -147,6 +147,7 @@ function ActivationPanel({ member, onBack, onActivated }) {
   const [validUntil, setValidUntil] = useState(defaultValidUntil())
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [amount, setAmount] = useState(PLAN_DEFAULT_AMOUNTS[PLAN_PRESETS[0]] || '')
+  const [isPersonalTraining, setIsPersonalTraining] = useState(Boolean(member.is_personal_training))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -155,6 +156,7 @@ function ActivationPanel({ member, onBack, onActivated }) {
     setUseCustomPlan(false)
     setPlan(p)
     setAmount(PLAN_DEFAULT_AMOUNTS[p] || '')
+    if (p === 'Personal Training') setIsPersonalTraining(true)
   }
 
   async function handleSubmit(e) {
@@ -182,12 +184,14 @@ function ActivationPanel({ member, onBack, onActivated }) {
         valid_until: validUntil,
         payment_method: paymentMethod,
         amount_inr: amountValue,
+        is_personal_training: isPersonalTraining,
       })
       setSuccess(true)
       onActivated({
         ...member,
         has_active_membership: true,
         valid_until: validUntil,
+        is_personal_training: isPersonalTraining || member.is_personal_training,
       })
     } catch (err) {
       setError(err?.message || 'Could not activate membership. Try again.')
@@ -214,6 +218,7 @@ function ActivationPanel({ member, onBack, onActivated }) {
         >
           {member.has_active_membership ? 'Active membership' : 'No active membership'}
         </span>
+        {member.is_personal_training && <span className="badge badge-active">Personal training</span>}
         {currentValidUntil && (
           <div className="member-detail-meta">Valid until {currentValidUntil}</div>
         )}
@@ -315,6 +320,15 @@ function ActivationPanel({ member, onBack, onActivated }) {
             </label>
           </div>
         </div>
+
+        <label className="radio-option" style={{ marginTop: '-0.4rem' }}>
+          <input
+            type="checkbox"
+            checked={isPersonalTraining}
+            onChange={(e) => setIsPersonalTraining(e.target.checked)}
+          />
+          Personal training member (adds them to trainers&apos; Personal Trainer tab)
+        </label>
 
         <button type="submit" className="btn btn-primary btn-large" disabled={submitting}>
           {submitting ? 'Activating…' : 'Activate membership'}

@@ -24,6 +24,7 @@ _ADDITIVE_COLUMNS = [
     ("staff_users", "identifier", "VARCHAR(255)"),
     ("staff_users", "role", "VARCHAR(20) DEFAULT 'reception' NOT NULL"),
     ("workout_exercises", "video_url", "VARCHAR(500)"),
+    ("members", "is_personal_training", "BOOLEAN DEFAULT FALSE NOT NULL"),
 ]
 
 

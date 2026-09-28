@@ -268,6 +268,12 @@ input[type='date'] {
   color: #06210f;
 }
 
+.btn-danger {
+  background: transparent;
+  color: #ff8e8e;
+  border: 1px solid rgba(229, 72, 77, 0.4);
+}
+
 .back-btn {
   align-self: flex-start;
 }
@@ -645,6 +651,151 @@ input[type='date'] {
 .order-total {
   font-weight: 600;
   color: var(--text);
+}
+
+/* ---------- personal trainer ---------- */
+
+.pt-day-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pt-day-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.pt-day-row--today {
+  border-color: var(--gold);
+}
+
+.pt-day-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  gap: 0.1rem;
+}
+
+.pt-day-weekday {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.pt-day-daynum {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.pt-day-row--today .pt-day-daynum,
+.pt-day-row--today .pt-day-weekday {
+  color: var(--gold);
+}
+
+.pt-day-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.pt-day-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pt-day-title--rest {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.pt-day-title--empty {
+  color: var(--text-faint);
+  font-weight: 500;
+}
+
+.pt-day-sub {
+  font-size: 0.78rem;
+  color: var(--text-faint);
+}
+
+.pt-day-chevron {
+  color: var(--text-faint);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.pt-exercise-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.pt-exercise-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pt-exercise-row-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pt-exercise-row-top input {
+  flex: 1;
+}
+
+.pt-exercise-row-meta {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pt-exercise-row-meta input {
+  flex: 1;
+  min-width: 0;
+}
+
+.icon-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---------- super admin ---------- */

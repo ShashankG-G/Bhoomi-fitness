@@ -14,6 +14,7 @@
     <p>
       {% if member.has_active_membership %}<span class="badge ok">active</span>{% else %}<span class="badge no">inactive</span>{% endif %}
       {% if member.membership_plan %}<span class="muted">— {{ member.membership_plan }}, valid until {{ member.membership_valid_until }}</span>{% endif %}
+      {% if member.is_personal_training %}<span class="badge ok">personal training</span>{% endif %}
     </p>
   </div>
 
@@ -24,16 +25,21 @@
         <option value="Monthly" {% if member.membership_plan == 'Monthly' %}selected{% endif %}>Monthly</option>
         <option value="Quarterly" {% if member.membership_plan == 'Quarterly' %}selected{% endif %}>Quarterly</option>
         <option value="Yearly" {% if member.membership_plan == 'Yearly' %}selected{% endif %}>Yearly</option>
+        <option value="Personal Training" {% if member.membership_plan == 'Personal Training' %}selected{% endif %}>Personal Training</option>
         <option value="__custom__">Other (name it below)</option>
       </select>
       <input type="text" name="custom_plan" placeholder="Custom plan name (if 'Other')"
-             value="{% if member.membership_plan not in ['Monthly', 'Quarterly', 'Yearly'] %}{{ member.membership_plan or '' }}{% endif %}" />
+             value="{% if member.membership_plan not in ['Monthly', 'Quarterly', 'Yearly', 'Personal Training'] %}{{ member.membership_plan or '' }}{% endif %}" />
       <input type="date" name="valid_until" value="{{ member.membership_valid_until or '' }}" required />
       <input type="number" name="amount_inr" placeholder="Amount paid (INR)" min="0" step="1" />
       <select name="payment_method">
         <option value="cash" {% if member.membership_payment_method == 'cash' %}selected{% endif %}>Cash</option>
         <option value="online" {% if member.membership_payment_method == 'online' %}selected{% endif %}>Online</option>
       </select>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+        <input type="checkbox" name="is_personal_training" value="1" style="width:auto;" {% if member.is_personal_training %}checked{% endif %} />
+        Personal training member (appears on trainers' Personal Trainer tab)
+      </label>
       <button type="submit">Save plan</button>
     </form>
     <p class="muted" style="margin-bottom:0;">The amount you enter here is logged to the financial reports (Super Admin / owner).</p>

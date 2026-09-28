@@ -16,6 +16,7 @@
         <option value="Monthly">Monthly</option>
         <option value="Quarterly">Quarterly</option>
         <option value="Yearly">Yearly</option>
+        <option value="Personal Training">Personal Training</option>
         <option value="__custom__">Other (name it below)</option>
       </select>
       <input type="text" name="custom_plan" placeholder="Custom plan name (if 'Other')" />
@@ -25,6 +26,10 @@
         <option value="cash">Cash</option>
         <option value="online">Online</option>
       </select>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:normal;">
+        <input type="checkbox" name="is_personal_training" value="1" style="width:auto;" />
+        Personal training member
+      </label>
       <button type="submit">Create member</button>
     </form>
     <p class="muted" style="margin-bottom:0;">
@@ -57,7 +62,7 @@
           <td>
             {% if m.has_active_membership %}<span class="badge ok">active</span>{% else %}<span class="badge no">inactive</span>{% endif %}
           </td>
-          <td class="muted">{{ m.membership_plan or "—" }}</td>
+          <td class="muted">{{ m.membership_plan or "—" }}{% if m.is_personal_training %} <span class="badge ok">PT</span>{% endif %}</td>
           <td class="muted">{{ m.membership_valid_until or "—" }}</td>
           <td class="muted">{{ m.created_at.strftime("%Y-%m-%d") }}</td>
         </tr>

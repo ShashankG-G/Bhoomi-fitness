@@ -13,6 +13,7 @@ from app.config import settings
 from app.database import get_db
 from app.deps import get_current_staff, require_role
 from app.notifications import send_code
+from app.pt_helpers import build_day_range, default_plan_range
 
 router = APIRouter(prefix="/api/staff", tags=["staff"])
 logger = logging.getLogger("bhoomi.staff")
@@ -141,6 +142,7 @@ def search_members(
             has_active_membership=m.has_active_membership,
             membership_plan=m.membership_plan,
             membership_valid_until=m.membership_valid_until,
+            is_personal_training=m.is_personal_training,
         )
         for m in members
     ]
@@ -161,6 +163,11 @@ def activate_membership(
     member.membership_plan = body.plan
     member.membership_valid_until = body.valid_until
     member.membership_payment_method = body.payment_method
+    if body.is_personal_training:
+        # Activation can flag PT on; it never turns an existing PT member
+        # off, since that's a separate, deliberate action (the Personal
+        # Trainer tab's toggle) not a side effect of renewing a membership.
+        member.is_personal_training = True
     db.add(member)
 
     db.add(
@@ -183,6 +190,155 @@ def activate_membership(
         has_active_membership=member.has_active_membership,
         membership_plan=member.membership_plan,
         membership_valid_until=member.membership_valid_until,
+        is_personal_training=member.is_personal_training,
+    )
+
+
+@router.patch("/members/{member_id}/personal-training", response_model=schemas.StaffMemberOut)
+def set_personal_training_flag(
+    member_id: int,
+    body: schemas.PersonalTrainingFlagIn,
+    _staff: models.StaffUser = Depends(require_role(*models.TRAINER_ROLES)),
+    db: Session = Depends(get_db),
+):
+    """Add or remove a member from the Personal Trainer roster, independent
+    of their membership plan — lets a trainer pick up any member (even one
+    reception didn't flag at activation) and start programming for them."""
+    member = db.get(models.Member, member_id)
+    if member is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Member not found")
+
+    member.is_personal_training = body.is_personal_training
+    db.commit()
+    db.refresh(member)
+
+    return schemas.StaffMemberOut(
+        id=member.id,
+        name=member.name,
+        identifier=member.identifier,
+        has_active_membership=member.has_active_membership,
+        membership_plan=member.membership_plan,
+        membership_valid_until=member.membership_valid_until,
+        is_personal_training=member.is_personal_training,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Personal training (trainer / head_trainer / owner) — the Personal Trainer
+# tab: see who's on a PT plan and set/edit their day-by-day workouts for the
+# next month. Members view their own plan read-only via
+# GET /api/workouts/personal-training-plan.
+# ---------------------------------------------------------------------------
+
+
+@router.get("/personal-training/members", response_model=list[schemas.PTMemberOut])
+def pt_list_members(
+    _staff: models.StaffUser = Depends(require_role(*models.TRAINER_ROLES)),
+    db: Session = Depends(get_db),
+):
+    members = db.query(models.Member).filter(models.Member.is_personal_training.is_(True)).all()
+    range_start, range_end = default_plan_range()
+
+    out = []
+    for m in sorted(members, key=lambda x: (x.name or x.identifier or "").lower()):
+        planned = (
+            db.query(models.PTPlanDay)
+            .filter(
+                models.PTPlanDay.member_id == m.id,
+                models.PTPlanDay.date >= range_start,
+                models.PTPlanDay.date <= range_end,
+            )
+            .count()
+        )
+        out.append(
+            schemas.PTMemberOut(
+                id=m.id,
+                name=m.name,
+                identifier=m.identifier,
+                has_active_membership=m.has_active_membership,
+                membership_plan=m.membership_plan,
+                membership_valid_until=m.membership_valid_until,
+                days_planned_next_30=planned,
+            )
+        )
+    return out
+
+
+@router.get("/personal-training/members/{member_id}/plan", response_model=list[schemas.PTDayOut])
+def pt_get_plan(
+    member_id: int,
+    start: datetime.date | None = Query(None),
+    end: datetime.date | None = Query(None),
+    _staff: models.StaffUser = Depends(require_role(*models.TRAINER_ROLES)),
+    db: Session = Depends(get_db),
+):
+    member = db.get(models.Member, member_id)
+    if member is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Member not found")
+
+    range_start, default_end = default_plan_range(start)
+    range_end = end or default_end
+    return build_day_range(db, member_id, range_start, range_end)
+
+
+@router.put("/personal-training/members/{member_id}/days/{day_date}", response_model=schemas.PTDayOut)
+def pt_upsert_day(
+    member_id: int,
+    day_date: datetime.date,
+    body: schemas.PTDayIn,
+    staff: models.StaffUser = Depends(require_role(*models.TRAINER_ROLES)),
+    db: Session = Depends(get_db),
+):
+    """Set (or replace) one day of a PT member's plan. Called once per day
+    the trainer edits from the day-editor screen — exercises are replaced
+    wholesale each save, which keeps the semantics simple (no separate
+    add/remove-exercise endpoints to keep in sync)."""
+    member = db.get(models.Member, member_id)
+    if member is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Member not found")
+
+    day = (
+        db.query(models.PTPlanDay)
+        .filter(models.PTPlanDay.member_id == member_id, models.PTPlanDay.date == day_date)
+        .first()
+    )
+    if day is None:
+        day = models.PTPlanDay(member_id=member_id, date=day_date)
+        db.add(day)
+
+    day.trainer_id = staff.id
+    day.is_rest_day = body.is_rest_day
+    day.title = (body.title or "").strip() or None
+    day.notes = (body.notes or "").strip() or None
+    day.exercises = (
+        []
+        if body.is_rest_day
+        else [
+            models.PTPlanExercise(
+                order_index=idx,
+                exercise_name=ex.exercise_name.strip(),
+                sets=ex.sets,
+                reps=(ex.reps or "").strip() or None,
+                notes=(ex.notes or "").strip() or None,
+            )
+            for idx, ex in enumerate(body.exercises)
+        ]
+    )
+
+    db.commit()
+    db.refresh(day)
+
+    return schemas.PTDayOut(
+        date=day.date,
+        is_rest_day=day.is_rest_day,
+        title=day.title,
+        notes=day.notes,
+        exercises=[
+            schemas.PTExerciseOut(id=e.id, exercise_name=e.exercise_name, sets=e.sets, reps=e.reps, notes=e.notes)
+            for e in day.exercises
+        ],
+        trainer_name=staff.full_name or staff.identifier,
+        updated_at=day.updated_at,
     )
 
 

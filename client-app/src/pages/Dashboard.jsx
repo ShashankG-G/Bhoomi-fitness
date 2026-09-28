@@ -114,6 +114,11 @@ export default function Dashboard() {
       </div>
 
       <div className="stack" style={{ marginTop: 14 }}>
+        {member?.is_personal_training && (
+          <button className="btn btn-secondary" type="button" onClick={() => navigate('/trainer-plan')}>
+            My Trainer Plan
+          </button>
+        )}
         <button className="btn btn-secondary" type="button" onClick={() => navigate('/history')}>
           Workout History
         </button>

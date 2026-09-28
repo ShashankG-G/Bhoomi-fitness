@@ -155,6 +155,7 @@ def admin_member_create(
     valid_until: str = Form(""),
     payment_method: str = Form("cash"),
     amount_inr: str = Form(""),
+    is_personal_training: str = Form(""),
     db: Session = Depends(get_db),
 ):
     name = name.strip()
@@ -194,6 +195,7 @@ def admin_member_create(
         membership_plan=final_plan,
         membership_valid_until=valid_until_date,
         membership_payment_method=payment_method if final_plan else None,
+        is_personal_training=bool(is_personal_training),
     )
     db.add(member)
     db.commit()
@@ -239,6 +241,7 @@ def admin_member_update_plan(
     valid_until: str = Form(...),
     payment_method: str = Form("cash"),
     amount_inr: str = Form(""),
+    is_personal_training: str = Form(""),
     db: Session = Depends(get_db),
 ):
     member = db.get(models.Member, member_id)
@@ -263,6 +266,7 @@ def admin_member_update_plan(
     member.membership_plan = final_plan
     member.membership_valid_until = valid_until_date
     member.membership_payment_method = payment_method
+    member.is_personal_training = bool(is_personal_training)
     db.commit()
 
     db.add(

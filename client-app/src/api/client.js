@@ -123,6 +123,7 @@ export const api = {
     }),
   workoutHistory: (months = 2) =>
     request(`/api/workouts/history?months=${months}`, { auth: true }),
+  personalTrainingPlan: () => request('/api/workouts/personal-training-plan', { auth: true }),
 
   // --- Cafeteria ---
   cafeteriaMenu: () => request('/api/cafeteria/menu'),

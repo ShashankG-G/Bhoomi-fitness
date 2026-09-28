@@ -7,6 +7,7 @@ import Home from './pages/Home.jsx'
 import WorkoutSession from './pages/WorkoutSession.jsx'
 import History from './pages/History.jsx'
 import Cafeteria from './pages/Cafeteria.jsx'
+import TrainerPlan from './pages/TrainerPlan.jsx'
 import NotFound from './pages/NotFound.jsx'
 
 function RequireAuth({ children }) {
@@ -79,6 +80,18 @@ export default function App() {
             <RequireMembership>
               <AppShell showNav={canUseDashboard}>
                 <Cafeteria />
+              </AppShell>
+            </RequireMembership>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/trainer-plan"
+        element={
+          <RequireAuth>
+            <RequireMembership>
+              <AppShell showNav={canUseDashboard}>
+                <TrainerPlan />
               </AppShell>
             </RequireMembership>
           </RequireAuth>

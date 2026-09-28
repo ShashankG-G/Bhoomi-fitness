@@ -97,6 +97,7 @@ def verify_code(body: schemas.VerifyCodeIn, db: Session = Depends(get_db)):
             name=member.name,
             identifier=member.identifier,
             has_active_membership=member.has_active_membership,
+            is_personal_training=member.is_personal_training,
         ),
     )
 
@@ -108,6 +109,7 @@ def get_me(member: models.Member = Depends(get_current_member)):
         name=member.name,
         identifier=member.identifier,
         has_active_membership=member.has_active_membership,
+        is_personal_training=member.is_personal_training,
     )
 
 
@@ -125,6 +127,7 @@ def update_me(
         name=member.name,
         identifier=member.identifier,
         has_active_membership=member.has_active_membership,
+        is_personal_training=member.is_personal_training,
     )
 
 

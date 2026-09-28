@@ -32,6 +32,7 @@ class MemberOut(BaseModel):
     name: Optional[str] = None
     identifier: str
     has_active_membership: bool
+    is_personal_training: bool = False
 
 
 class VerifyCodeOut(BaseModel):
@@ -218,6 +219,7 @@ class StaffMemberOut(BaseModel):
     has_active_membership: bool
     membership_plan: Optional[str] = None
     membership_valid_until: Optional[datetime.date] = None
+    is_personal_training: bool = False
 
 
 class ActivateMembershipIn(BaseModel):
@@ -225,10 +227,62 @@ class ActivateMembershipIn(BaseModel):
     valid_until: datetime.date
     payment_method: Literal["cash", "online"]
     amount_inr: float = Field(ge=0)
+    is_personal_training: bool = False
 
 
 class StaffOrderStatusUpdateIn(BaseModel):
     status: Literal["preparing", "ready", "completed"]
+
+
+# ---------------------------------------------------------------------------
+# Personal training (trainer / head_trainer / owner set it, members view it)
+# ---------------------------------------------------------------------------
+
+
+class PersonalTrainingFlagIn(BaseModel):
+    is_personal_training: bool
+
+
+class PTMemberOut(BaseModel):
+    id: int
+    name: Optional[str] = None
+    identifier: str
+    has_active_membership: bool
+    membership_plan: Optional[str] = None
+    membership_valid_until: Optional[datetime.date] = None
+    days_planned_next_30: int = 0
+
+
+class PTExerciseIn(BaseModel):
+    exercise_name: str = Field(min_length=1, max_length=160)
+    sets: Optional[int] = Field(default=None, ge=1, le=20)
+    reps: Optional[str] = Field(default=None, max_length=40)
+    notes: Optional[str] = Field(default=None, max_length=300)
+
+
+class PTExerciseOut(BaseModel):
+    id: Optional[int] = None
+    exercise_name: str
+    sets: Optional[int] = None
+    reps: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class PTDayIn(BaseModel):
+    is_rest_day: bool = False
+    title: Optional[str] = Field(default=None, max_length=120)
+    notes: Optional[str] = Field(default=None, max_length=500)
+    exercises: list[PTExerciseIn] = Field(default_factory=list)
+
+
+class PTDayOut(BaseModel):
+    date: datetime.date
+    is_rest_day: bool = False
+    title: Optional[str] = None
+    notes: Optional[str] = None
+    exercises: list[PTExerciseOut] = Field(default_factory=list)
+    trainer_name: Optional[str] = None
+    updated_at: Optional[datetime.datetime] = None
 
 
 # ---------------------------------------------------------------------------

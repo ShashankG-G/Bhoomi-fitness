@@ -11,6 +11,7 @@ const Lookup = lazy(() => import('./pages/Lookup.jsx'))
 const Cafeteria = lazy(() => import('./pages/Cafeteria.jsx'))
 const Reports = lazy(() => import('./pages/Reports.jsx'))
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin.jsx'))
+const PersonalTrainer = lazy(() => import('./pages/PersonalTrainer.jsx'))
 
 function PageLoading() {
   return <p className="hint">Loading…</p>
@@ -26,6 +27,12 @@ function RequireAuth({ children }) {
 function RequireSuperAdmin({ children }) {
   const { isSuperAdmin } = useAuth()
   if (!isSuperAdmin) return <Navigate to="/" replace />
+  return children
+}
+
+function RequireTrainer({ children }) {
+  const { isTrainer } = useAuth()
+  if (!isTrainer) return <Navigate to="/" replace />
   return children
 }
 
@@ -76,6 +83,16 @@ export default function App() {
             <Suspense fallback={<PageLoading />}>
               <Reports />
             </Suspense>
+          }
+        />
+        <Route
+          path="personal-trainer"
+          element={
+            <RequireTrainer>
+              <Suspense fallback={<PageLoading />}>
+                <PersonalTrainer />
+              </Suspense>
+            </RequireTrainer>
           }
         />
         <Route

@@ -4,6 +4,9 @@ import { api, getToken, setToken, setUnauthorizedHandler } from '../api/client.j
 const AuthContext = createContext(null)
 
 export const SUPER_ADMIN_ROLES = ['head_trainer', 'owner']
+// Who can use the Personal Trainer tab — trainers themselves, plus
+// head_trainer/owner for oversight. Mirrors app.models.TRAINER_ROLES.
+export const TRAINER_ROLES = ['trainer', 'head_trainer', 'owner']
 
 export function AuthProvider({ children }) {
   const [token, setTokenState] = useState(() => getToken())
@@ -11,6 +14,7 @@ export function AuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true)
   const isAuthenticated = !!token
   const isSuperAdmin = !!staff && SUPER_ADMIN_ROLES.includes(staff.role)
+  const isTrainer = !!staff && TRAINER_ROLES.includes(staff.role)
 
   const logout = useCallback(() => {
     setToken(null)
@@ -64,8 +68,18 @@ export function AuthProvider({ children }) {
   }, [])
 
   const value = useMemo(
-    () => ({ token, staff, isAuthenticated, isSuperAdmin, initializing, requestCode, verifyCode, logout }),
-    [token, staff, isAuthenticated, isSuperAdmin, initializing, requestCode, verifyCode, logout]
+    () => ({
+      token,
+      staff,
+      isAuthenticated,
+      isSuperAdmin,
+      isTrainer,
+      initializing,
+      requestCode,
+      verifyCode,
+      logout,
+    }),
+    [token, staff, isAuthenticated, isSuperAdmin, isTrainer, initializing, requestCode, verifyCode, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
