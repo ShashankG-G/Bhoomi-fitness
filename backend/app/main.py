@@ -24,7 +24,7 @@ logging.basicConfig(
 app = FastAPI(
     title="Bhoomi Fitness API",
     version="1.0.0",
-    description="Backend for Bhoomi Fitness — Kengeri, Bengaluru.",
+    description="Backend for Bhoomi Fitness — Sonnenahalli, Bengaluru.",
 )
 
 app.add_middleware(
@@ -44,6 +44,17 @@ def _admin_auth_required_handler(request: Request, exc: AdminAuthRequired):
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+
+    try:
+        from app.schema_patch import ensure_schema
+
+        ensure_schema(engine)
+    except Exception:
+        logging.getLogger("bhoomi").exception(
+            "Schema patch failed — app will still start, but a column added "
+            "in a recent update may be missing on this database."
+        )
+
     logging.getLogger("bhoomi").info(
         "Bhoomi Fitness backend started. BACKEND_ENV=%s DATABASE_URL=%s",
         settings.BACKEND_ENV,
@@ -73,12 +84,13 @@ def on_startup():
     # only runs when SEED_DEMO_DATA=true. Idempotent like the seed above.
     if settings.SEED_DEMO_DATA:
         try:
-            from app.seed import seed_demo_members
+            from app.seed import seed_demo_members, seed_demo_staff
 
             seed_demo_members()
+            seed_demo_staff()
         except Exception:
             logging.getLogger("bhoomi").exception(
-                "Demo member seeding failed — app will still start."
+                "Demo member/staff seeding failed — app will still start."
             )
 
 

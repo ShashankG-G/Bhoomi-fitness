@@ -104,3 +104,49 @@ export const api = {
   post: (path, body, opts) => request(path, { ...opts, method: 'POST', body }),
   patch: (path, body, opts) => request(path, { ...opts, method: 'PATCH', body }),
 }
+
+/**
+ * Fetches a CSV/file report with the bearer token attached and triggers a
+ * browser download. Reports aren't JSON, so this bypasses the `request()`
+ * helper above rather than trying to squeeze it through the same path.
+ */
+export async function downloadReport(path, suggestedFilename) {
+  const headers = {}
+  const token = getToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  let res
+  try {
+    res = await fetch(`${API_URL}${path}`, { headers })
+  } catch {
+    throw new ApiError('Could not reach the server. Check your connection.', 0, null)
+  }
+
+  if (res.status === 401) {
+    if (unauthorizedHandler) unauthorizedHandler()
+    throw new ApiError('Session expired. Please log in again.', 401, null)
+  }
+  if (!res.ok) {
+    let data = null
+    try {
+      data = await res.json()
+    } catch {
+      // non-JSON error body — fall through to the generic message below
+    }
+    throw new ApiError(data?.detail || `Could not generate the report (${res.status}).`, res.status, data)
+  }
+
+  const blob = await res.blob()
+  const disposition = res.headers.get('Content-Disposition') || ''
+  const match = disposition.match(/filename="?([^"]+)"?/)
+  const filename = match?.[1] || suggestedFilename || 'report.csv'
+
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  window.URL.revokeObjectURL(url)
+}

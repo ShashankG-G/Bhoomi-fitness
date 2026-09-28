@@ -32,6 +32,8 @@ function defaultValidUntil() {
   return d.toISOString().slice(0, 10)
 }
 
+const PLAN_DEFAULT_AMOUNTS = { Monthly: '1500', Quarterly: '4000', Annual: '14000' }
+
 export default function Lookup() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -144,9 +146,16 @@ function ActivationPanel({ member, onBack, onActivated }) {
   const [useCustomPlan, setUseCustomPlan] = useState(false)
   const [validUntil, setValidUntil] = useState(defaultValidUntil())
   const [paymentMethod, setPaymentMethod] = useState('cash')
+  const [amount, setAmount] = useState(PLAN_DEFAULT_AMOUNTS[PLAN_PRESETS[0]] || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  function selectPresetPlan(p) {
+    setUseCustomPlan(false)
+    setPlan(p)
+    setAmount(PLAN_DEFAULT_AMOUNTS[p] || '')
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -159,6 +168,11 @@ function ActivationPanel({ member, onBack, onActivated }) {
       setError('Pick a valid-until date.')
       return
     }
+    const amountValue = Number(amount)
+    if (amount === '' || Number.isNaN(amountValue) || amountValue < 0) {
+      setError('Enter the amount collected (0 if it was free/complimentary).')
+      return
+    }
     setSubmitting(true)
     setError('')
     setSuccess(false)
@@ -167,6 +181,7 @@ function ActivationPanel({ member, onBack, onActivated }) {
         plan: finalPlan,
         valid_until: validUntil,
         payment_method: paymentMethod,
+        amount_inr: amountValue,
       })
       setSuccess(true)
       onActivated({
@@ -228,10 +243,7 @@ function ActivationPanel({ member, onBack, onActivated }) {
                 className={
                   'chip' + (!useCustomPlan && plan === p ? ' chip-active' : '')
                 }
-                onClick={() => {
-                  setUseCustomPlan(false)
-                  setPlan(p)
-                }}
+                onClick={() => selectPresetPlan(p)}
               >
                 {p}
               </button>
@@ -262,6 +274,19 @@ function ActivationPanel({ member, onBack, onActivated }) {
             value={validUntil}
             min={todayIso()}
             onChange={(e) => setValidUntil(e.target.value)}
+          />
+        </label>
+
+        <label className="field">
+          <span className="field-label">Amount collected (INR)</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="e.g. 1500"
           />
         </label>
 

@@ -9,25 +9,34 @@ import Login from './pages/Login.jsx'
 const Scanner = lazy(() => import('./pages/Scanner.jsx'))
 const Lookup = lazy(() => import('./pages/Lookup.jsx'))
 const Cafeteria = lazy(() => import('./pages/Cafeteria.jsx'))
+const Reports = lazy(() => import('./pages/Reports.jsx'))
+const SuperAdmin = lazy(() => import('./pages/SuperAdmin.jsx'))
 
 function PageLoading() {
   return <p className="hint">Loading…</p>
 }
 
 function RequireAuth({ children }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, initializing } = useAuth()
+  if (initializing) return <PageLoading />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return children
 }
 
+function RequireSuperAdmin({ children }) {
+  const { isSuperAdmin } = useAuth()
+  if (!isSuperAdmin) return <Navigate to="/" replace />
+  return children
+}
+
 export default function App() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, initializing } = useAuth()
 
   return (
     <Routes>
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Login />}
+        element={!initializing && isAuthenticated ? <Navigate to="/" replace /> : <Login />}
       />
       <Route
         path="/"
@@ -59,6 +68,24 @@ export default function App() {
             <Suspense fallback={<PageLoading />}>
               <Cafeteria />
             </Suspense>
+          }
+        />
+        <Route
+          path="reports"
+          element={
+            <Suspense fallback={<PageLoading />}>
+              <Reports />
+            </Suspense>
+          }
+        />
+        <Route
+          path="super-admin"
+          element={
+            <RequireSuperAdmin>
+              <Suspense fallback={<PageLoading />}>
+                <SuperAdmin />
+              </Suspense>
+            </RequireSuperAdmin>
           }
         />
       </Route>

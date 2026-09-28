@@ -29,12 +29,14 @@
       <input type="text" name="custom_plan" placeholder="Custom plan name (if 'Other')"
              value="{% if member.membership_plan not in ['Monthly', 'Quarterly', 'Yearly'] %}{{ member.membership_plan or '' }}{% endif %}" />
       <input type="date" name="valid_until" value="{{ member.membership_valid_until or '' }}" required />
+      <input type="number" name="amount_inr" placeholder="Amount paid (INR)" min="0" step="1" />
       <select name="payment_method">
         <option value="cash" {% if member.membership_payment_method == 'cash' %}selected{% endif %}>Cash</option>
         <option value="online" {% if member.membership_payment_method == 'online' %}selected{% endif %}>Online</option>
       </select>
       <button type="submit">Save plan</button>
     </form>
+    <p class="muted" style="margin-bottom:0;">The amount you enter here is logged to the financial reports (Super Admin / owner).</p>
   </div>
 
   <div class="card">

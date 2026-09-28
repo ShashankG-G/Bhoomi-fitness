@@ -1,6 +1,6 @@
 # Bhoomi Fitness — Client App
 
-The member-facing installable PWA for Bhoomi Fitness (Kengeri, Bengaluru).
+The member-facing installable PWA for Bhoomi Fitness (Sonnenahalli, SMV Layout, Bengaluru).
 Members log in with email/phone + a one-time code, show a rotating QR at
 the front desk for entry, log workouts against the exercise library, and
 order from the cafeteria.

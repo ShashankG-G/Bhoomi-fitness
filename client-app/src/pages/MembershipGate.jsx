@@ -29,14 +29,15 @@ export default function MembershipGate({ member }) {
         </h1>
         <p className="subtitle">
           Your membership isn&apos;t active yet. Swing by the front desk at Bhoomi Fitness,
-          Kengeri to get set up — cash or online, whatever&apos;s easiest — and your workouts,
+          Sonnenahalli to get set up — cash or online, whatever&apos;s easiest — and your workouts,
           entry QR and cafeteria ordering will unlock right away.
         </p>
       </div>
 
       <div className="card" style={{ textAlign: 'left', marginBottom: 20 }}>
         <p style={{ fontWeight: 600, marginBottom: 6 }}>Bhoomi Fitness</p>
-        <p className="subtitle">Kengeri, Bengaluru, Karnataka</p>
+        <p className="subtitle">1464, Block 1, Sonnenahalli, SMV Layout</p>
+        <p className="subtitle">Bengaluru, Karnataka 560060</p>
       </div>
 
       <button className="btn btn-secondary" type="button" onClick={logout}>

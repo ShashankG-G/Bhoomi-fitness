@@ -154,6 +154,7 @@ def admin_member_create(
     custom_plan: str = Form(""),
     valid_until: str = Form(""),
     payment_method: str = Form("cash"),
+    amount_inr: str = Form(""),
     db: Session = Depends(get_db),
 ):
     name = name.strip()
@@ -169,6 +170,7 @@ def admin_member_create(
 
     final_plan = _resolve_plan(plan, custom_plan)
     valid_until_date = None
+    amount_value = None
     if final_plan:
         if not valid_until:
             return RedirectResponse(
@@ -179,6 +181,10 @@ def admin_member_create(
             valid_until_date = datetime.date.fromisoformat(valid_until)
         except ValueError:
             return RedirectResponse(url="/admin/members?error=Invalid+date.", status_code=303)
+        try:
+            amount_value = float(amount_inr) if amount_inr.strip() else 0.0
+        except ValueError:
+            return RedirectResponse(url="/admin/members?error=Invalid+amount.", status_code=303)
 
     member = models.Member(
         name=name,
@@ -192,6 +198,18 @@ def admin_member_create(
     db.add(member)
     db.commit()
     db.refresh(member)
+
+    if final_plan:
+        db.add(
+            models.MembershipTransaction(
+                member_id=member.id,
+                plan=final_plan,
+                amount_inr=amount_value,
+                payment_method=payment_method,
+                recorded_by_staff_id=None,
+            )
+        )
+        db.commit()
 
     return RedirectResponse(url=f"/admin/members/{member.id}?ok=Member+created.", status_code=303)
 
@@ -220,6 +238,7 @@ def admin_member_update_plan(
     custom_plan: str = Form(""),
     valid_until: str = Form(...),
     payment_method: str = Form("cash"),
+    amount_inr: str = Form(""),
     db: Session = Depends(get_db),
 ):
     member = db.get(models.Member, member_id)
@@ -235,11 +254,26 @@ def admin_member_update_plan(
         valid_until_date = datetime.date.fromisoformat(valid_until)
     except ValueError:
         return RedirectResponse(url=f"/admin/members/{member_id}?error=Invalid+date.", status_code=303)
+    try:
+        amount_value = float(amount_inr) if amount_inr.strip() else 0.0
+    except ValueError:
+        return RedirectResponse(url=f"/admin/members/{member_id}?error=Invalid+amount.", status_code=303)
 
     member.has_active_membership = True
     member.membership_plan = final_plan
     member.membership_valid_until = valid_until_date
     member.membership_payment_method = payment_method
+    db.commit()
+
+    db.add(
+        models.MembershipTransaction(
+            member_id=member.id,
+            plan=final_plan,
+            amount_inr=amount_value,
+            payment_method=payment_method,
+            recorded_by_staff_id=None,
+        )
+    )
     db.commit()
 
     return RedirectResponse(url=f"/admin/members/{member_id}?ok=Plan+updated.", status_code=303)
@@ -340,51 +374,72 @@ def admin_staff(request: Request, db: Session = Depends(get_db)):
     )
 
 
+ROLE_LABELS = {
+    models.ROLE_RECEPTION: "Reception",
+    models.ROLE_TRAINER: "Trainer",
+    models.ROLE_HEAD_TRAINER: "Head Trainer (Super Admin)",
+    models.ROLE_OWNER: "Owner (Super Admin)",
+}
+
+
 @router.post("/staff/create", dependencies=[Depends(require_admin)])
 def admin_staff_create(
-    username: str = Form(...),
-    password: str = Form(...),
+    identifier: str = Form(...),
+    role: str = Form(...),
     full_name: str = Form(""),
     db: Session = Depends(get_db),
 ):
-    username = username.strip()
-    if not username or len(password) < 8:
-        return RedirectResponse(
-            url="/admin/staff?error=Username+required+and+password+must+be+at+least+8+characters.",
-            status_code=303,
-        )
-    existing = db.query(models.StaffUser).filter(models.StaffUser.username == username).first()
+    identifier = identifier.strip().lower()
+    if not identifier:
+        return RedirectResponse(url="/admin/staff?error=Phone+or+email+is+required.", status_code=303)
+    if role not in models.STAFF_ROLES:
+        return RedirectResponse(url="/admin/staff?error=Invalid+role.", status_code=303)
+
+    existing = db.query(models.StaffUser).filter(models.StaffUser.identifier == identifier).first()
     if existing:
-        return RedirectResponse(url="/admin/staff?error=That+username+already+exists.", status_code=303)
+        return RedirectResponse(url="/admin/staff?error=That+phone+or+email+is+already+registered.", status_code=303)
 
     db.add(
         models.StaffUser(
-            username=username,
-            password_hash=security.hash_password(password),
+            identifier=identifier,
             full_name=full_name.strip() or None,
-            role="staff",
+            role=role,
             active=True,
         )
     )
     db.commit()
-    return RedirectResponse(url=f"/admin/staff?ok=Created+staff+account+%27{username}%27.", status_code=303)
+    return RedirectResponse(
+        url=f"/admin/staff?ok=Created+{ROLE_LABELS.get(role, role)}+account+for+%27{identifier}%27.+They+sign+in+from+the+staff+app+with+this+number.",
+        status_code=303,
+    )
 
 
-@router.post("/staff/reset-password", dependencies=[Depends(require_admin)])
-def admin_staff_reset_password(
-    staff_id: int = Form(...),
-    new_password: str = Form(...),
-    db: Session = Depends(get_db),
-):
-    if len(new_password) < 8:
-        return RedirectResponse(url="/admin/staff?error=Password+must+be+at+least+8+characters.", status_code=303)
+@router.post("/staff/{staff_id}/set-role", dependencies=[Depends(require_admin)])
+def admin_staff_set_role(staff_id: int, role: str = Form(...), db: Session = Depends(get_db)):
+    if role not in models.STAFF_ROLES:
+        return RedirectResponse(url="/admin/staff?error=Invalid+role.", status_code=303)
 
     staff_user = db.query(models.StaffUser).filter(models.StaffUser.id == staff_id).first()
     if not staff_user:
         return RedirectResponse(url="/admin/staff?error=Staff+account+not+found.", status_code=303)
 
-    staff_user.password_hash = security.hash_password(new_password)
+    staff_user.role = role
     db.commit()
     return RedirectResponse(
-        url=f"/admin/staff?ok=Password+updated+for+%27{staff_user.username}%27.", status_code=303
+        url=f"/admin/staff?ok=Role+updated+to+{ROLE_LABELS.get(role, role)}+for+%27{staff_user.identifier}%27.",
+        status_code=303,
+    )
+
+
+@router.post("/staff/{staff_id}/toggle-active", dependencies=[Depends(require_admin)])
+def admin_staff_toggle_active(staff_id: int, db: Session = Depends(get_db)):
+    staff_user = db.query(models.StaffUser).filter(models.StaffUser.id == staff_id).first()
+    if not staff_user:
+        return RedirectResponse(url="/admin/staff?error=Staff+account+not+found.", status_code=303)
+
+    staff_user.active = not staff_user.active
+    db.commit()
+    state = "reactivated" if staff_user.active else "deactivated"
+    return RedirectResponse(
+        url=f"/admin/staff?ok=Account+%27{staff_user.identifier}%27+{state}.", status_code=303
     )

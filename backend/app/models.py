@@ -59,16 +59,60 @@ class OTPCode(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+# Staff roles, from least to most privileged. RECEPTION and TRAINER are
+# day-to-day operating staff; HEAD_TRAINER and OWNER additionally get the
+# "Super Admin" view (all staff, every financial transaction) — see
+# SUPER_ADMIN_ROLES below and app/deps.require_role().
+ROLE_RECEPTION = "reception"
+ROLE_TRAINER = "trainer"
+ROLE_HEAD_TRAINER = "head_trainer"
+ROLE_OWNER = "owner"
+STAFF_ROLES = (ROLE_RECEPTION, ROLE_TRAINER, ROLE_HEAD_TRAINER, ROLE_OWNER)
+SUPER_ADMIN_ROLES = (ROLE_HEAD_TRAINER, ROLE_OWNER)
+
+
 class StaffUser(Base):
     __tablename__ = "staff_users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    username: Mapped[str] = mapped_column(String(80), unique=True, index=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(128), nullable=False)
+    # Phone (or email) — staff sign in with this + a one-time code, the same
+    # flow as members. Accounts are created only from the hidden /admin
+    # panel (master key), never by self-signup.
+    identifier: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    role: Mapped[str] = mapped_column(String(20), default="staff", nullable=False)
+    role: Mapped[str] = mapped_column(String(20), default=ROLE_RECEPTION, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    # Legacy columns from the old username/password login, replaced by
+    # identifier + OTP above. Kept (nullable, unused) purely so a database
+    # that already has this table from before this change doesn't need a
+    # manual migration — see app/schema_patch.py.
+    username: Mapped[str | None] = mapped_column(String(80), unique=True, index=True, nullable=True)
+    password_hash: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+
+class MembershipTransaction(Base):
+    """One row per membership sale/renewal/activation — the financial ledger
+    for memberships, parallel to CafeteriaOrder for cafeteria revenue. Written
+    whenever staff or the admin panel activates or changes a member's plan;
+    never edited afterward. This is what the Super Admin financial view and
+    the owner's financial report are computed from."""
+
+    __tablename__ = "membership_transactions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    member_id: Mapped[int] = mapped_column(ForeignKey("members.id"), nullable=False)
+    plan: Mapped[str] = mapped_column(String(80), nullable=False)
+    amount_inr: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    payment_method: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Which staff member recorded this (null when done from the master
+    # admin panel rather than the staff app).
+    recorded_by_staff_id: Mapped[int | None] = mapped_column(ForeignKey("staff_users.id"), nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    member: Mapped["Member"] = relationship()
+    recorded_by: Mapped["StaffUser | None"] = relationship()
 
 
 class WorkoutExercise(Base):
@@ -80,6 +124,11 @@ class WorkoutExercise(Base):
     muscle_group: Mapped[str] = mapped_column(String(40), nullable=False)
     instructions: Mapped[str] = mapped_column(Text, nullable=False)
     animation_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    # A real YouTube demo/tutorial video for this exercise, so members who
+    # aren't sure about form can watch one instead of just reading text.
+    # Nullable + schema-patched (see app/schema_patch.py) so it's additive
+    # on top of an already-deployed exercise library.
+    video_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     default_sets: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     default_reps: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
 

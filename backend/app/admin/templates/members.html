@@ -20,6 +20,7 @@
       </select>
       <input type="text" name="custom_plan" placeholder="Custom plan name (if 'Other')" />
       <input type="date" name="valid_until" />
+      <input type="number" name="amount_inr" placeholder="Amount paid (INR)" min="0" step="1" />
       <select name="payment_method">
         <option value="cash">Cash</option>
         <option value="online">Online</option>
@@ -29,7 +30,7 @@
     <p class="muted" style="margin-bottom:0;">
       Leave plan as "No membership yet" to create the person without activating a
       membership — you can set it later from their detail page. Otherwise "Valid
-      until" is required.
+      until" is required. The amount you enter is logged to the financial reports.
     </p>
   </div>
 

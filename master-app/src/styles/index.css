@@ -70,6 +70,8 @@ select {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .topbar-mark {
@@ -90,6 +92,17 @@ select {
   font-weight: 600;
   letter-spacing: 0.02em;
   font-size: 1.02rem;
+}
+
+.topbar-role {
+  color: var(--text-faint);
+  font-size: 0.78rem;
+  margin-left: 0.3rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-content {
@@ -632,6 +645,35 @@ input[type='date'] {
 .order-total {
   font-weight: 600;
   color: var(--text);
+}
+
+/* ---------- super admin ---------- */
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-dim);
 }
 
 /* ---------- small screens polish ---------- */

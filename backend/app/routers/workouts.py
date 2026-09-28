@@ -20,6 +20,7 @@ def get_library(db: Session = Depends(get_db)):
             muscle_group=e.muscle_group,
             instructions=e.instructions,
             animation_url=e.animation_url,
+            video_url=e.video_url,
             default_sets=e.default_sets,
             default_reps=e.default_reps,
         )

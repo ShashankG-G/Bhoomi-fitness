@@ -1,6 +1,6 @@
 # Bhoomi Fitness — full app system
 
-Kengeri, Bengaluru. This repo contains everything for the gym: the public
+Sonnenahalli, SMV Layout, Bengaluru. This repo contains everything for the gym: the public
 marketing website, the backend API, the member app, and the staff app.
 
 ```

@@ -1,7 +1,7 @@
 # Bhoomi Fitness — Staff App (master-app)
 
 Installable PWA used by front-desk / cafeteria staff at Bhoomi Fitness
-(Kengeri, Bengaluru) on a phone or tablet at the entrance and cafeteria
+(Sonnenahalli, SMV Layout, Bengaluru) on a phone or tablet at the entrance and cafeteria
 counter. Covers staff login, QR/manual entry scanning, member lookup and
 membership activation, and the cafeteria order queue.
 

@@ -45,3 +45,19 @@ def get_current_staff(
     if staff is None or not staff.active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Staff account not found or inactive")
     return staff
+
+
+def require_role(*roles: str):
+    """Dependency factory: only staff whose role is one of `roles` may proceed.
+
+    Usage: `staff: models.StaffUser = Depends(require_role(*models.SUPER_ADMIN_ROLES))`.
+    Builds on get_current_staff, so it also enforces a valid staff bearer
+    token and an active account before checking role.
+    """
+
+    def _dep(staff: models.StaffUser = Depends(get_current_staff)) -> models.StaffUser:
+        if staff.role not in roles:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Not permitted for this role")
+        return staff
+
+    return _dep

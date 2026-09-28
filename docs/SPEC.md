@@ -7,7 +7,7 @@ backend, client-app, master-app) must agree with this contract exactly.
 ## Brand
 
 - Name: **Bhoomi Fitness**
-- Location: Kengeri, Bengaluru, Karnataka, India
+- Location: 1464, Block 1, Sonnenahalli, SMV Layout, Bengaluru, Karnataka 560060
 - Tone: premium, confident, cinematic — think the title-sequence energy of
   *Suits* (Harvey Specter) and *The Mentalist* (Patrick Jane): sharp dark
   backgrounds, slow confident reveals, crisp typography, restrained gold/brass

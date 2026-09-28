@@ -1,7 +1,12 @@
 """
-Idempotent seed script: workout exercise library, cafeteria menu, and one
-default staff account for local/testing use. Optionally, 10 demo members
-with varied membership states (see seed_demo_members / SEED_DEMO_DATA).
+Idempotent seed script: workout exercise library and cafeteria menu.
+Optionally, 10 demo members with varied membership states, and one demo
+staff account per role (see seed_demo_members / seed_demo_staff /
+SEED_DEMO_DATA).
+
+Staff accounts are never seeded with a password — staff sign in with
+phone/email + a one-time code, and accounts are only ever created from the
+hidden /admin panel (master key). See app/routers/staff.py.
 
 Run with:  python -m app.seed
 (safe to re-run — it only inserts rows that don't already exist)
@@ -11,14 +16,40 @@ import datetime
 from app import models, security
 from app.database import Base, SessionLocal, engine
 
-DEFAULT_STAFF_USERNAME = "frontdesk"
-DEFAULT_STAFF_PASSWORD = "Bhoomi@Front1"  # noqa: S105 — intentional dev-only default, see README
-
 # NOTE on animation_url / image_url below: these point at a placeholder
 # pattern (https://example.com/...) because we don't have confirmed-stable,
 # freely-embeddable demo media to hardcode here. Shashank should swap these
 # for real hosted GIFs/images (e.g. uploaded to S3/Cloudinary or committed
 # into client-app/public) before shipping. Do not treat these URLs as live.
+#
+# video_url IS live, unlike animation_url above: each one is a real YouTube
+# tutorial for that exact exercise (checked via YouTube's oEmbed endpoint
+# before being added here), from an established fitness channel — ATHLEAN-X,
+# Jeff Nippard, Scott Herman Fitness, Colossus Fitness, Tiger Fitness, or an
+# equipment maker's own channel (Concept2 for rowing). The member app embeds
+# these directly so a member who's unsure about form can just watch one.
+VIDEO_URLS = {
+    "barbell-bench-press": "https://www.youtube.com/watch?v=vthMCtgVtFw",
+    "push-up": "https://www.youtube.com/watch?v=Zi6c09DRGxk",
+    "incline-dumbbell-press": "https://www.youtube.com/watch?v=hChjZQhX1Ls",
+    "lat-pulldown": "https://www.youtube.com/watch?v=OcFCHdQHjVU",
+    "seated-cable-row": "https://www.youtube.com/watch?v=7BkgqzC6WsM",
+    "pull-up": "https://www.youtube.com/watch?v=swkOeoEcKW0",
+    "barbell-back-squat": "https://www.youtube.com/watch?v=nEQQle9-0NA",
+    "leg-press": "https://www.youtube.com/watch?v=K5n2vg3oZa4",
+    "romanian-deadlift": "https://www.youtube.com/watch?v=_oyxCn2iSjU",
+    "walking-lunge": "https://www.youtube.com/watch?v=Pwsn3HR4L90",
+    "overhead-barbell-press": "https://www.youtube.com/watch?v=_RlRDWO2jfg",
+    "dumbbell-lateral-raise": "https://www.youtube.com/watch?v=sS77YMMLX-8",
+    "barbell-bicep-curl": "https://www.youtube.com/watch?v=RqZIRSUqQ7Y",
+    "triceps-rope-pushdown": "https://www.youtube.com/watch?v=fIXvhr5URd4",
+    "plank": "https://www.youtube.com/watch?v=jYX5FpYZA7c",
+    "hanging-leg-raise": "https://www.youtube.com/watch?v=Pr1ieGZ5atk",
+    "russian-twist": "https://www.youtube.com/watch?v=onDjITj9AHI",
+    "treadmill-running": "https://www.youtube.com/watch?v=Upf1ogk3IFA",
+    "jump-rope": "https://www.youtube.com/watch?v=_UTR1VWg8WY",
+    "rowing-machine-intervals": "https://www.youtube.com/watch?v=4zWu1yuJ0_g",
+}
 
 EXERCISES = [
     dict(
@@ -372,6 +403,53 @@ DEMO_MEMBERS = [
 ]
 
 
+DEMO_STAFF = [
+    dict(name="Priya Sharma", identifier="9900000001", role=models.ROLE_RECEPTION),
+    dict(name="Karan Mehta", identifier="9900000002", role=models.ROLE_TRAINER),
+    dict(name="Meera Iyer", identifier="9900000003", role=models.ROLE_HEAD_TRAINER),
+    dict(name="Shashank", identifier="9900000004", role=models.ROLE_OWNER),
+]
+
+
+def seed_demo_staff():
+    """Idempotent: one demo staff account per role (reception, trainer,
+    head_trainer, owner) so the Super Admin view can be demoed end to end.
+    Skips any identifier that already exists."""
+    db = SessionLocal()
+    try:
+        existing = {
+            s.identifier
+            for s in db.query(models.StaffUser.identifier).filter(
+                models.StaffUser.identifier.in_([d["identifier"] for d in DEMO_STAFF])
+            )
+        }
+        added = 0
+        for d in DEMO_STAFF:
+            if d["identifier"] in existing:
+                continue
+            db.add(
+                models.StaffUser(
+                    identifier=d["identifier"],
+                    full_name=d["name"],
+                    role=d["role"],
+                    active=True,
+                )
+            )
+            added += 1
+        db.commit()
+
+        print("=" * 60)
+        print("Bhoomi Fitness — demo staff seed complete")
+        print(f"  Demo staff added: {added} (skipped {len(DEMO_STAFF) - added} already present)")
+        print("  Reception: 9900000001   Trainer: 9900000002")
+        print("  Head Trainer (Super Admin): 9900000003   Owner (Super Admin): 9900000004")
+        print("  Sign in from the master app with any of these numbers — the OTP")
+        print("  code shows up in these server logs, same as a member login.")
+        print("=" * 60)
+    finally:
+        db.close()
+
+
 def seed_demo_members():
     """Idempotent: skips any identifier that already exists (whether created
     by this function before, or by a real signup that happens to collide,
@@ -419,23 +497,31 @@ def seed():
     db = SessionLocal()
     try:
         # --- Exercises -------------------------------------------------
-        existing_slugs = {e.slug for e in db.query(models.WorkoutExercise.slug).all()}
+        existing_by_slug = {e.slug: e for e in db.query(models.WorkoutExercise).all()}
         added_exercises = 0
+        backfilled_videos = 0
         for ex in EXERCISES:
-            if ex["slug"] in existing_slugs:
-                continue
-            db.add(
-                models.WorkoutExercise(
-                    slug=ex["slug"],
-                    name=ex["name"],
-                    muscle_group=ex["muscle_group"],
-                    instructions=ex["instructions"],
-                    animation_url=f"https://example.com/exercises/{ex['slug']}.gif",
-                    default_sets=ex["default_sets"],
-                    default_reps=ex["default_reps"],
+            video_url = VIDEO_URLS.get(ex["slug"])
+            existing = existing_by_slug.get(ex["slug"])
+            if existing is None:
+                db.add(
+                    models.WorkoutExercise(
+                        slug=ex["slug"],
+                        name=ex["name"],
+                        muscle_group=ex["muscle_group"],
+                        instructions=ex["instructions"],
+                        animation_url=f"https://example.com/exercises/{ex['slug']}.gif",
+                        video_url=video_url,
+                        default_sets=ex["default_sets"],
+                        default_reps=ex["default_reps"],
+                    )
                 )
-            )
-            added_exercises += 1
+                added_exercises += 1
+            elif video_url and not existing.video_url:
+                # Backfill: this exercise was seeded before video_url existed
+                # (e.g. an already-deployed database) — add it non-destructively.
+                existing.video_url = video_url
+                backfilled_videos += 1
         db.commit()
 
         # --- Cafeteria menu ----------------------------------------------
@@ -458,33 +544,14 @@ def seed():
             added_menu += 1
         db.commit()
 
-        # --- Default staff account --------------------------------------
-        staff_created = False
-        existing_staff = db.query(models.StaffUser).filter(models.StaffUser.username == DEFAULT_STAFF_USERNAME).first()
-        if existing_staff is None:
-            db.add(
-                models.StaffUser(
-                    username=DEFAULT_STAFF_USERNAME,
-                    password_hash=security.hash_password(DEFAULT_STAFF_PASSWORD),
-                    full_name="Front Desk",
-                    role="staff",
-                    active=True,
-                )
-            )
-            db.commit()
-            staff_created = True
-
         print("=" * 60)
         print("Bhoomi Fitness — seed complete")
         print(f"  Workout exercises added: {added_exercises} (skipped {len(EXERCISES) - added_exercises} already present)")
+        if backfilled_videos:
+            print(f"  Demo videos backfilled onto {backfilled_videos} already-existing exercise(s)")
         print(f"  Cafeteria menu items added: {added_menu} (skipped {len(CAFETERIA_MENU) - added_menu} already present)")
-        if staff_created:
-            print("  Default staff account created:")
-            print(f"    username: {DEFAULT_STAFF_USERNAME}")
-            print(f"    password: {DEFAULT_STAFF_PASSWORD}")
-            print("    >>> CHANGE THIS PASSWORD before going live. <<<")
-        else:
-            print(f"  Default staff account '{DEFAULT_STAFF_USERNAME}' already exists — left untouched.")
+        print("  No default staff account is created — add staff from the /admin")
+        print("  panel (master key), then they sign in with phone + OTP.")
         print("=" * 60)
     finally:
         db.close()
@@ -496,3 +563,4 @@ if __name__ == "__main__":
 
     if settings.SEED_DEMO_DATA:
         seed_demo_members()
+        seed_demo_staff()

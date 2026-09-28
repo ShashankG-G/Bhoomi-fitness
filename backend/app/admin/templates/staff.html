@@ -8,26 +8,48 @@
 
   <div class="card">
     <h3 style="margin-top:0;">Staff accounts</h3>
+    <p class="muted" style="margin-top:-8px;">
+      Staff sign in from the staff app with their phone number and a one-time code — no password.
+      Head Trainer and Owner get the Super Admin view (all staff, every financial transaction, full reports).
+    </p>
     <table>
-      <thead><tr><th>Username</th><th>Full name</th><th>Role</th><th>Status</th><th>Created</th><th>Reset password</th></tr></thead>
+      <thead><tr><th>Phone / email</th><th>Full name</th><th>Role</th><th>Status</th><th>Created</th><th>Change role</th><th></th></tr></thead>
       <tbody>
         {% for s in staff_users %}
         <tr>
-          <td>{{ s.username }}</td>
+          <td>{{ s.identifier or "—" }}</td>
           <td class="muted">{{ s.full_name or "—" }}</td>
-          <td class="muted">{{ s.role }}</td>
+          <td class="muted">
+            {% if s.role == "head_trainer" %}Head Trainer (Super Admin)
+            {% elif s.role == "owner" %}Owner (Super Admin)
+            {% elif s.role == "trainer" %}Trainer
+            {% else %}Reception{% endif %}
+          </td>
           <td>{% if s.active %}<span class="badge ok">active</span>{% else %}<span class="badge no">disabled</span>{% endif %}</td>
           <td class="muted">{{ s.created_at.strftime("%Y-%m-%d") }}</td>
           <td>
-            <form method="post" action="/admin/staff/reset-password" style="display:flex; gap:8px;">
-              <input type="hidden" name="staff_id" value="{{ s.id }}" />
-              <input type="password" name="new_password" placeholder="New password" minlength="8" required />
-              <button type="submit">Set</button>
+            <form method="post" action="/admin/staff/{{ s.id }}/set-role" style="display:flex; gap:8px;">
+              <select name="role">
+                <option value="reception" {% if s.role == "reception" %}selected{% endif %}>Reception</option>
+                <option value="trainer" {% if s.role == "trainer" %}selected{% endif %}>Trainer</option>
+                <option value="head_trainer" {% if s.role == "head_trainer" %}selected{% endif %}>Head Trainer (Super Admin)</option>
+                <option value="owner" {% if s.role == "owner" %}selected{% endif %}>Owner (Super Admin)</option>
+              </select>
+              <button type="submit">Save</button>
+            </form>
+          </td>
+          <td>
+            <form method="post" action="/admin/staff/{{ s.id }}/toggle-active">
+              {% if s.active %}
+              <button type="submit" style="background: var(--danger); color: #fff;">Deactivate</button>
+              {% else %}
+              <button type="submit">Reactivate</button>
+              {% endif %}
             </form>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="6" class="muted">No staff accounts yet.</td></tr>
+        <tr><td colspan="7" class="muted">No staff accounts yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -35,10 +57,19 @@
 
   <div class="card">
     <h3 style="margin-top:0;">Add a new staff account</h3>
+    <p class="muted" style="margin-top:-8px;">
+      This is the only way staff accounts are created — there is no self-signup.
+      Give them the number you register here so they can log in from the staff app.
+    </p>
     <form method="post" action="/admin/staff/create" class="filter-form">
-      <input type="text" name="username" placeholder="Username" required />
+      <input type="text" name="identifier" placeholder="Phone number (or email)" required />
       <input type="text" name="full_name" placeholder="Full name (optional)" />
-      <input type="password" name="password" placeholder="Password" minlength="8" required />
+      <select name="role">
+        <option value="reception">Reception</option>
+        <option value="trainer">Trainer</option>
+        <option value="head_trainer">Head Trainer (Super Admin)</option>
+        <option value="owner">Owner (Super Admin)</option>
+      </select>
       <button type="submit">Create</button>
     </form>
   </div>

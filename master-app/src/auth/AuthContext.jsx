@@ -3,13 +3,19 @@ import { api, getToken, setToken, setUnauthorizedHandler } from '../api/client.j
 
 const AuthContext = createContext(null)
 
+export const SUPER_ADMIN_ROLES = ['head_trainer', 'owner']
+
 export function AuthProvider({ children }) {
   const [token, setTokenState] = useState(() => getToken())
+  const [staff, setStaff] = useState(null)
+  const [initializing, setInitializing] = useState(true)
   const isAuthenticated = !!token
+  const isSuperAdmin = !!staff && SUPER_ADMIN_ROLES.includes(staff.role)
 
   const logout = useCallback(() => {
     setToken(null)
     setTokenState(null)
+    setStaff(null)
   }, [])
 
   // Any 401 from the API client anywhere in the app clears the token and
@@ -19,23 +25,47 @@ export function AuthProvider({ children }) {
     return () => setUnauthorizedHandler(null)
   }, [logout])
 
-  const login = useCallback(async (username, password) => {
-    const data = await api.post(
-      '/api/staff/login',
-      { username, password },
-      { auth: false }
-    )
+  // On boot, if a token is already stored, fetch /me to recover the staff
+  // object (name/identifier/role) so role-gated tabs render correctly after
+  // a page refresh, not just right after login.
+  useEffect(() => {
+    let cancelled = false
+    async function boot() {
+      if (getToken()) {
+        try {
+          const me = await api.get('/api/staff/me')
+          if (!cancelled) setStaff(me)
+        } catch {
+          if (!cancelled) logout()
+        }
+      }
+      if (!cancelled) setInitializing(false)
+    }
+    boot()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const requestCode = useCallback(async (identifier) => {
+    return api.post('/api/staff/request-code', { identifier }, { auth: false })
+  }, [])
+
+  const verifyCode = useCallback(async (identifier, code) => {
+    const data = await api.post('/api/staff/verify-code', { identifier, code }, { auth: false })
     if (!data?.access_token) {
       throw new Error('Login response did not include an access token.')
     }
     setToken(data.access_token)
     setTokenState(data.access_token)
+    setStaff(data.staff)
     return data
   }, [])
 
   const value = useMemo(
-    () => ({ token, isAuthenticated, login, logout }),
-    [token, isAuthenticated, login, logout]
+    () => ({ token, staff, isAuthenticated, isSuperAdmin, initializing, requestCode, verifyCode, logout }),
+    [token, staff, isAuthenticated, isSuperAdmin, initializing, requestCode, verifyCode, logout]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

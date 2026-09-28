@@ -1,6 +1,6 @@
 # Bhoomi Fitness — Website
 
-The public marketing site for Bhoomi Fitness (Kengeri, Bengaluru). Plain
+The public marketing site for Bhoomi Fitness (Sonnenahalli, SMV Layout, Bengaluru). Plain
 HTML/CSS/JS, no build step, no dependencies to install — it's just static
 files, ready for GitHub Pages. The only external calls are two CDN
 `<script>` tags (GSAP + ScrollTrigger, loaded with `defer`) and Google

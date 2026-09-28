@@ -4,6 +4,7 @@ import { api, ApiError } from '../api/client'
 import ErrorBanner from '../components/ErrorBanner.jsx'
 import LoadingScreen from '../components/LoadingScreen.jsx'
 import ExerciseMedia from '../components/ExerciseMedia.jsx'
+import ExerciseVideo from '../components/ExerciseVideo.jsx'
 import { formatDuration } from '../utils/format.js'
 import { useRestTimer } from '../hooks/useRestTimer.js'
 
@@ -286,6 +287,15 @@ export default function WorkoutSession() {
                               <p className="subtitle" style={{ marginBottom: 12, lineHeight: 1.5 }}>
                                 {ex.instructions}
                               </p>
+                            )}
+
+                            {ex.video_url && (
+                              <div style={{ marginBottom: 12 }}>
+                                <p className="section-title" style={{ marginBottom: 8 }}>
+                                  Not sure about the form? Watch a demo
+                                </p>
+                                <ExerciseVideo url={ex.video_url} title={ex.name} />
+                              </div>
                             )}
 
                             {sets.length > 0 && (

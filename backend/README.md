@@ -1,6 +1,6 @@
 # Bhoomi Fitness — Backend
 
-FastAPI backend for the Bhoomi Fitness gym app system (Kengeri, Bengaluru).
+FastAPI backend for the Bhoomi Fitness gym app system (Sonnenahalli, SMV Layout, Bengaluru).
 Implements the exact API contract in `../docs/SPEC.md` for the two frontend
 PWAs (`client-app`, `master-app`) to build against.
 

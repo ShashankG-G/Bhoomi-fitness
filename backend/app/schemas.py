@@ -83,6 +83,7 @@ class WorkoutExerciseOut(BaseModel):
     muscle_group: str
     instructions: str
     animation_url: str
+    video_url: Optional[str] = None
     default_sets: int
     default_reps: int
 
@@ -180,14 +181,34 @@ class OrderStatusOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class StaffLoginIn(BaseModel):
-    username: str
-    password: str
+class StaffRequestCodeIn(BaseModel):
+    identifier: str
 
 
-class StaffLoginOut(BaseModel):
+class StaffRequestCodeOut(BaseModel):
+    message: str
+    dev_code: Optional[str] = None
+
+
+class StaffVerifyCodeIn(BaseModel):
+    identifier: str
+    code: str
+
+
+StaffRole = Literal["reception", "trainer", "head_trainer", "owner"]
+
+
+class StaffOut(BaseModel):
+    id: int
+    name: Optional[str] = None
+    identifier: str
+    role: StaffRole
+
+
+class StaffVerifyCodeOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    staff: StaffOut
 
 
 class StaffMemberOut(BaseModel):
@@ -203,7 +224,47 @@ class ActivateMembershipIn(BaseModel):
     plan: str
     valid_until: datetime.date
     payment_method: Literal["cash", "online"]
+    amount_inr: float = Field(ge=0)
 
 
 class StaffOrderStatusUpdateIn(BaseModel):
     status: Literal["preparing", "ready", "completed"]
+
+
+# ---------------------------------------------------------------------------
+# Super admin (head_trainer / owner only)
+# ---------------------------------------------------------------------------
+
+
+class SuperAdminStaffOut(BaseModel):
+    id: int
+    name: Optional[str] = None
+    identifier: Optional[str] = None
+    role: StaffRole
+    active: bool
+    created_at: datetime.datetime
+
+
+class FinancialSummaryOut(BaseModel):
+    range_start: datetime.date
+    range_end: datetime.date
+    membership_revenue_inr: float
+    membership_transaction_count: int
+    cafeteria_revenue_inr: float
+    cafeteria_order_count: int
+    total_revenue_inr: float
+    total_members: int
+    active_members: int
+    entries_in_range: int
+
+
+class SuperAdminTransactionOut(BaseModel):
+    id: str
+    type: Literal["membership", "cafeteria"]
+    member_name: Optional[str] = None
+    member_identifier: Optional[str] = None
+    description: str
+    amount_inr: float
+    payment_method: Optional[str] = None
+    recorded_by: Optional[str] = None
+    created_at: datetime.datetime
